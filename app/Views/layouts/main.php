@@ -27,11 +27,22 @@
 
     .sidebar {
       width: var(--sidebar-width);
-      min-height: 100vh;
+      height: 100vh;
       position: fixed;
       background: var(--jsca-primary);
       z-index: 100;
       overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255,255,255,0.15) transparent;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.15);
+      border-radius: 4px;
     }
 
     .sidebar .brand {
@@ -271,9 +282,28 @@
     <i class="bi bi-person-plus"></i> Register Player
   </a>
 
+  <div class="nav-section">Coaches</div>
+  <a href="<?= base_url('coaches') ?>" class="nav-link <?= str_starts_with(uri_string(), 'coaches') ? 'active' : '' ?>">
+    <i class="bi bi-person-video3"></i> Coach Registry
+  </a>
+  <a href="<?= base_url('coaches/create') ?>" class="nav-link <?= uri_string() === 'coaches/create' ? 'active' : '' ?>">
+    <i class="bi bi-person-plus"></i> Register Coach
+  </a>
+
+  <div class="nav-section">Teams</div>
+  <a href="<?= base_url('teams') ?>" class="nav-link <?= str_starts_with(uri_string(), 'teams') ? 'active' : '' ?>">
+    <i class="bi bi-shield-fill"></i> Team Registry
+  </a>
+  <a href="<?= base_url('teams/create') ?>" class="nav-link <?= uri_string() === 'teams/create' ? 'active' : '' ?>">
+    <i class="bi bi-plus-circle"></i> Create Team
+  </a>
+
   <div class="nav-section">Tournaments</div>
   <a href="<?= base_url('tournaments') ?>" class="nav-link <?= str_starts_with(uri_string(), 'tournaments') ? 'active' : '' ?>">
     <i class="bi bi-trophy"></i> Tournaments
+  </a>
+  <a href="<?= base_url('tournaments/create') ?>" class="nav-link <?= uri_string() === 'tournaments/create' ? 'active' : '' ?>">
+    <i class="bi bi-plus-circle"></i> Create Tournament
   </a>
   <a href="<?= base_url('fixtures') ?>" class="nav-link <?= str_starts_with(uri_string(), 'fixtures') ? 'active' : '' ?>">
     <i class="bi bi-calendar3"></i> Fixtures

@@ -29,22 +29,62 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('edit/(:num)',    'Players::edit/$1');
         $routes->post('update/(:num)', 'Players::update/$1');
         $routes->post('delete/(:num)', 'Players::delete/$1');
-        $routes->get('verify-aadhaar/(:num)', 'Players::verifyAadhaar/$1');
-        $routes->get('export',         'Players::export');
-        $routes->get('stats/(:num)',   'Players::stats/$1');
+        $routes->get('verify-aadhaar/(:num)',  'Players::verifyAadhaar/$1');
+        $routes->get('export',                  'Players::export');
+        $routes->get('stats/(:num)',            'Players::stats/$1');
+        $routes->post('upload-doc/(:num)',      'Players::uploadDoc/$1');
+        $routes->post('verify-doc/(:num)',      'Players::verifyDoc/$1');
+        $routes->post('delete-doc/(:num)',      'Players::deleteDoc/$1');
+    });
+
+    // ── Coaches ───────────────────────────────────────────────
+    $routes->group('coaches', function ($routes) {
+        $routes->get('/',                       'Coaches::index');
+        $routes->get('create',                  'Coaches::create');
+        $routes->post('store',                  'Coaches::store');
+        $routes->get('view/(:num)',             'Coaches::view/$1');
+        $routes->get('edit/(:num)',             'Coaches::edit/$1');
+        $routes->post('update/(:num)',          'Coaches::update/$1');
+        $routes->post('delete/(:num)',          'Coaches::delete/$1');
+        $routes->post('upload-doc/(:num)',      'Coaches::uploadDoc/$1');
+        $routes->post('verify-doc/(:num)',      'Coaches::verifyDoc/$1');
+        $routes->post('delete-doc/(:num)',      'Coaches::deleteDoc/$1');
+    });
+
+    // ── Teams ───────────────────────────────────────────────
+    $routes->group('teams', function ($routes) {
+        $routes->get('/',                           'Teams::index');
+        $routes->get('create',                      'Teams::create');
+        $routes->post('store',                      'Teams::store');
+        $routes->get('view/(:num)',                 'Teams::view/$1');
+        $routes->get('edit/(:num)',                 'Teams::edit/$1');
+        $routes->post('update/(:num)',              'Teams::update/$1');
+        $routes->post('delete/(:num)',              'Teams::delete/$1');
+        $routes->post('add-player/(:num)',          'Teams::addPlayer/$1');
+        $routes->post('remove-player/(:num)/(:num)','Teams::removePlayer/$1/$2');
+        $routes->post('add-coach/(:num)',           'Teams::addCoach/$1');
+        $routes->post('remove-coach/(:num)/(:num)', 'Teams::removeCoach/$1/$2');
+        $routes->post('upload-doc/(:num)',          'Teams::uploadDoc/$1');
+        $routes->post('verify-doc/(:num)',          'Teams::verifyDoc/$1');
+        $routes->post('delete-doc/(:num)',          'Teams::deleteDoc/$1');
     });
 
     // ── Tournaments ───────────────────────────────────────────
     $routes->group('tournaments', function ($routes) {
-        $routes->get('/',              'Tournaments::index');
-        $routes->get('create',         'Tournaments::create');
-        $routes->post('store',         'Tournaments::store');
-        $routes->get('view/(:num)',    'Tournaments::view/$1');
-        $routes->get('edit/(:num)',    'Tournaments::edit/$1');
-        $routes->post('update/(:num)', 'Tournaments::update/$1');
-        $routes->post('delete/(:num)', 'Tournaments::delete/$1');
-        $routes->get('teams/(:num)',   'Tournaments::teams/$1');
-        $routes->post('add-team/(:num)', 'Tournaments::addTeam/$1');
+        $routes->get('/',                           'Tournaments::index');
+        $routes->get('create',                      'Tournaments::create');
+        $routes->post('store',                      'Tournaments::store');
+        $routes->get('view/(:num)',                 'Tournaments::view/$1');
+        $routes->get('edit/(:num)',                 'Tournaments::edit/$1');
+        $routes->post('update/(:num)',              'Tournaments::update/$1');
+        $routes->post('delete/(:num)',              'Tournaments::delete/$1');
+        $routes->post('update-status/(:num)',       'Tournaments::updateStatus/$1');
+        $routes->get('teams/(:num)',                'Tournaments::teams/$1');
+        $routes->post('add-team/(:num)',            'Tournaments::addTeam/$1');
+        $routes->post('remove-team/(:num)/(:num)',  'Tournaments::removeTeam/$1/$2');
+        $routes->post('upload-doc/(:num)',          'Tournaments::uploadDoc/$1');
+        $routes->post('verify-doc/(:num)',          'Tournaments::verifyDoc/$1');
+        $routes->post('delete-doc/(:num)',          'Tournaments::deleteDoc/$1');
     });
 
     // ── Fixtures ──────────────────────────────────────────────
@@ -65,11 +105,15 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
     // ── Matches / Scoring ─────────────────────────────────────
     $routes->group('matches', function ($routes) {
-        $routes->get('live',               'Matches::live');
-        $routes->get('score/(:num)',       'Matches::score/$1');
-        $routes->post('save-score/(:num)', 'Matches::saveScore/$1');
-        $routes->get('scorecard/(:num)',   'Matches::scorecard/$1');
-        $routes->post('complete/(:num)',   'Matches::complete/$1');
+        $routes->get('live',                    'Matches::live');
+        $routes->get('live/api-refresh',        'Matches::apiRefresh');
+        $routes->post('live/store',             'Matches::storeLocal');
+        $routes->post('live/update/(:num)',      'Matches::updateLocal/$1');
+        $routes->post('live/delete/(:num)',      'Matches::deleteLocal/$1');
+        $routes->get('score/(:num)',            'Matches::score/$1');
+        $routes->post('save-score/(:num)',      'Matches::saveScore/$1');
+        $routes->get('scorecard/(:num)',        'Matches::scorecard/$1');
+        $routes->post('complete/(:num)',        'Matches::complete/$1');
     });
 
     // ── Officials ─────────────────────────────────────────────

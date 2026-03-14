@@ -166,6 +166,7 @@ class Players extends BaseController
             'player'        => $player,
             'stats'         => $stats,
             'recentMatches' => $recentMatches,
+            'documents'     => $this->db->table('player_documents')->where('player_id', $id)->orderBy('created_at','DESC')->get()->getResultArray(),
         ]);
     }
 
@@ -297,6 +298,85 @@ class Players extends BaseController
         }
         fclose($output);
         exit;
+    }
+
+    // ── POST /players/upload-doc/:id ────────────────────────
+    public function uploadDoc(int $id)
+    {
+        $this->requirePermission('players');
+        $player = $this->db->table('players')->where('id', $id)->get()->getRowArray();
+        if (!$player) return redirect()->back()->with('error', 'Player not found.');
+
+        $file = $this->request->getFile('document');
+        if (!$file || !$file->isValid()) {
+            return redirect()->back()->with('error', 'Invalid file.');
+        }
+
+        $allowed = ['jpg','jpeg','png','pdf'];
+        if (!in_array(strtolower($file->getExtension()), $allowed)) {
+            return redirect()->back()->with('error', 'Only JPG, PNG or PDF allowed.');
+        }
+
+        $docType  = $this->request->getPost('doc_type');
+        $label    = $this->request->getPost('label');
+        $fileName = $file->getRandomName();
+        $file->move(WRITEPATH . 'uploads/player_docs/' . $id, $fileName);
+
+        $this->db->table('player_documents')->insert([
+            'player_id'   => $id,
+            'doc_type'    => $docType,
+            'label'       => $label,
+            'file_path'   => 'uploads/player_docs/' . $id . '/' . $fileName,
+            'file_name'   => $file->getClientName(),
+            'mime_type'   => $file->getMimeType(),
+            'uploaded_by' => session('user_id'),
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        // Auto-mark aadhaar verified when both sides uploaded
+        if (in_array($docType, ['aadhaar_front', 'aadhaar_back'])) {
+            $sides = $this->db->table('player_documents')
+                ->whereIn('doc_type', ['aadhaar_front','aadhaar_back'])
+                ->where('player_id', $id)->countAllResults();
+            if ($sides >= 2) {
+                $this->db->table('players')->where('id', $id)->update(['aadhaar_verified' => 1]);
+            }
+        }
+
+        $this->audit('DOC_UPLOADED', 'players', $id, null, ['doc_type' => $docType]);
+        return redirect()->to('players/view/' . $id)->with('success', 'Document uploaded.');
+    }
+
+    // ── POST /players/verify-doc/:docId ──────────────────────
+    public function verifyDoc(int $docId)
+    {
+        $this->requirePermission('players');
+        $doc = $this->db->table('player_documents')->where('id', $docId)->get()->getRowArray();
+        if (!$doc) return redirect()->back()->with('error', 'Document not found.');
+
+        $this->db->table('player_documents')->where('id', $docId)->update([
+            'verified'    => 1,
+            'verified_by' => session('user_id'),
+            'verified_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        $this->audit('DOC_VERIFIED', 'players', $doc['player_id'], null, ['doc_id' => $docId]);
+        return redirect()->to('players/view/' . $doc['player_id'])->with('success', 'Document verified.');
+    }
+
+    // ── POST /players/delete-doc/:docId ──────────────────────
+    public function deleteDoc(int $docId)
+    {
+        $this->requirePermission('players');
+        $doc = $this->db->table('player_documents')->where('id', $docId)->get()->getRowArray();
+        if (!$doc) return redirect()->back()->with('error', 'Document not found.');
+
+        $fullPath = WRITEPATH . $doc['file_path'];
+        if (file_exists($fullPath)) unlink($fullPath);
+
+        $this->db->table('player_documents')->where('id', $docId)->delete();
+        $this->audit('DOC_DELETED', 'players', $doc['player_id'], $doc);
+        return redirect()->to('players/view/' . $doc['player_id'])->with('success', 'Document removed.');
     }
 
     // ── Recalculate career stats ─────────────────────────────

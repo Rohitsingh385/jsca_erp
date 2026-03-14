@@ -1,0 +1,62 @@
+{
+  "apikey": "2eb0e245-da87-4c93-9d97-ef5622e9d534",
+  "data": {
+    "id": "ea479cff-ddbe-48e0-9e4a-528f61a8a175",
+    "name": "Hobart Hurricanes Women vs Sydney Thunder Women, 6th Match",
+    "matchType": "t20",
+    "status": "Hobart Hurricanes Women won by 5 wkts",
+    "venue": "Cricket Central, Sydney",
+    "date": "2025-10-22",
+    "dateTimeGMT": "2025-10-22T03:30:00",
+    "teams": [
+      "Hobart Hurricanes Women",
+      "Sydney Thunder Women"
+    ],
+    "teamInfo": [
+      {
+        "name": "Hobart Hurricanes Women",
+        "shortname": "HB-W",
+        "img": "https://g.cricapi.com/iapi/2635-638040172943294988.webp?w=48"
+      },
+      {
+        "name": "Sydney Thunder Women",
+        "shortname": "ST-W",
+        "img": "https://g.cricapi.com/iapi/2636-638040169751591741.webp?w=48"
+      }
+    ],
+    "score": [
+      {
+        "r": 92,
+        "w": 10,
+        "o": 17.4,
+        "inning": "Sydney Thunder Women Inning 1"
+      },
+      {
+        "r": 95,
+        "w": 5,
+        "o": 16,
+        "inning": "Hobart Hurricanes Women Inning 1"
+      }
+    ],
+    "tossWinner": "hobart hurricanes women",
+    "tossChoice": "bowl",
+    "matchWinner": "Hobart Hurricanes Women",
+    "series_id": "f6f07506-8226-4882-8b03-fadb1e696826",
+    "fantasyEnabled": true,
+    "bbbEnabled": true,
+    "hasSquad": true,
+    "matchStarted": true,
+    "matchEnded": true
+  },
+  "status": "success",
+  "info": {
+    "hitsToday": 79,
+    "hitsUsed": 1,
+    "hitsLimit": 100,
+    "credits": 0,
+    "server": 1,
+    "queryTime": 21.2774,
+    "s": 0,
+    "cache": 0
+  }
+}
