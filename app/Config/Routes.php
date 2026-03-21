@@ -61,7 +61,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->post('update/(:num)',              'Teams::update/$1');
         $routes->post('delete/(:num)',              'Teams::delete/$1');
         $routes->post('add-player/(:num)',          'Teams::addPlayer/$1');
-        $routes->post('remove-player/(:num)/(:num)','Teams::removePlayer/$1/$2');
+        $routes->post('remove-player/(:num)/(:num)', 'Teams::removePlayer/$1/$2');
         $routes->post('add-coach/(:num)',           'Teams::addCoach/$1');
         $routes->post('remove-coach/(:num)/(:num)', 'Teams::removeCoach/$1/$2');
         $routes->post('upload-doc/(:num)',          'Teams::uploadDoc/$1');
@@ -140,6 +140,20 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('auto-generate/(:num)',    'Finance::autoGenerate/$1');
         $routes->get('reports',                 'Finance::reports');
         $routes->get('export',                  'Finance::export');
+
+        // Group Master
+        $routes->get('accgroups', 'Finance::accgroups');
+        $routes->post('accgroups/store', 'Finance::storeaccGroup');
+        $routes->get('accgroups/edit/(:num)', 'Finance::editaccGroup/$1');
+        $routes->post('accgroups/update/(:num)', 'Finance::updateaccGroup/$1');
+        $routes->get('accgroups/deleteaccGroup/(:segment)', 'Finance::deleteaccGroup/$1');
+
+        // Ledger Heads
+        $routes->get('ledger-heads', 'Finance::ledgerHeads');
+        $routes->post('ledger/store', 'Finance::storeLedger');
+        $routes->get('ledger/edit/(:num)', 'Finance::editLedger/$1');
+        $routes->post('ledger/update/(:num)', 'Finance::updateLedger/$1');
+        $routes->get('ledger/delete/(:num)', 'Finance::deleteLedger/$1');
     });
 
     // ── Analytics ─────────────────────────────────────────────

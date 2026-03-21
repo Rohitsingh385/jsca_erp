@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: db
--- Generation Time: Mar 14, 2026 at 01:08 PM
+-- Generation Time: Mar 21, 2026 at 08:27 AM
 -- Server version: 10.4.34-MariaDB-1:10.4.34+maria~ubu2004
 -- PHP Version: 8.3.26
 
@@ -20,6 +20,61 @@ SET time_zone = "+00:00";
 --
 -- Database: `jsca_erp`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `account_groups`
+--
+
+CREATE TABLE `account_groups` (
+  `G_Name` varchar(10) NOT NULL,
+  `Acc_Name` varchar(200) NOT NULL,
+  `Acc_Type` varchar(100) NOT NULL,
+  `YesNo` varchar(20) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `account_groups`
+--
+
+INSERT INTO `account_groups` (`G_Name`, `Acc_Name`, `Acc_Type`, `YesNo`) VALUES
+('G1', 'ACCOUNTS PAYABLE', 'Libilities', 'No'),
+('G10', 'DEPOSITS (Assets)', 'Assets', 'No'),
+('G11', 'SALES TAX', 'Libilities', 'No'),
+('G12', 'EXPENDITURE', 'Expenses', 'No'),
+('G13', 'EXPENSES (Trading A/C)', 'Expenses', 'No'),
+('G14', 'EXPENSES (Profit & Loss A/C)', 'Expenses', 'No'),
+('G15', 'FIXED ASSETS', 'Assets', 'No'),
+('G16', 'INCOME (Revenue)', 'Income', 'No'),
+('G17', 'INVESTMENTS', 'Assets', 'No'),
+('G18', 'LOANS & ADVANCES (Assets)', 'Assets', 'No'),
+('G19', 'LOAN (Liabilities)', 'Libilities', 'No'),
+('G2', 'ACCOUNTS RECEIVABLE', 'Assets', 'No'),
+('G20', 'MFG. & TDG. EXPENSES', 'Expenses', 'No'),
+('G21', 'MISC. EXPENSES (Assets)', 'Expenses', 'No'),
+('G22', 'PROVISIONS', 'Liabilities', 'No'),
+('G23', 'PURCHASE ACCOUNT', 'Expenses', 'No'),
+('G24', 'RESERVES & SURPLUS', 'Liabilities', 'No'),
+('G25', 'SALES ACCOUNT', 'Income', 'No'),
+('G26', 'SECURED LOANS', 'Liabilities', 'No'),
+('G27', 'OPENING STOCK', 'Assets', 'No'),
+('G28', 'SUNDRY CREDITORS', 'Liabilities', 'No'),
+('G29', 'SUNDRY DEBTORS', 'Assets', 'No'),
+('G3', 'ADMN. EXPENSES', 'Expenses', 'No'),
+('G30', 'SUSPENSE ACCOUNT', 'Expenses', 'No'),
+('G31', 'UNSECURED LOANS', 'Liabilities', 'No'),
+('G32', 'PURCHASE RETURNS', 'Expenses', 'No'),
+('G33', 'SALES RETURNS', 'Income', 'No'),
+('G34', 'WITHDRAWAL', 'Expenses', 'No'),
+('G35', 'ADDITIONAL CAPITAL', 'Liabilities', 'No'),
+('G36', 'CLOSING STOCK', 'Assets', 'No'),
+('G4', 'BANK ACCOUNT', 'Assets', 'No'),
+('G5', 'BANK OCC A/C', 'Liabilities', 'No'),
+('G6', 'CAPITAL ACCOUNT', 'Liabilities', 'No'),
+('G7', 'CASH A/C', 'Assets', 'No'),
+('G8', 'ASSETS', 'Assets', 'No'),
+('G9', 'LIABILITIES', 'Liabilities', 'No');
 
 -- --------------------------------------------------------
 
@@ -57,7 +112,16 @@ INSERT INTO `audit_logs` (`id`, `user_id`, `action`, `module`, `record_id`, `old
 (10, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-14 06:14:27'),
 (11, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-14 09:35:08'),
 (12, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-14 11:50:10'),
-(13, 1, 'CREATE', 'players', 1, NULL, '{\"jsca_player_id\":\"JSCA-P-2026-00001\",\"full_name\":\"rowhit\",\"date_of_birth\":\"2026-03-14\",\"gender\":\"Male\",\"age_category\":\"U14\",\"district_id\":\"2\",\"role\":\"Batsman\",\"batting_style\":\"Right-hand\",\"bowling_style\":\"Right-arm Fast\",\"aadhaar_number\":\"312312312312\",\"phone\":\"6206086679\",\"email\":\"Ghgsa@gmail.com\",\"address\":\"ranchi\",\"guardian_name\":\"rk\",\"guardian_phone\":\"4234234234234\",\"photo_path\":\"uploads\\/players\\/1773491034_cf0c9ab476d0593b60dc.jpg\",\"registered_by\":\"1\",\"created_at\":\"2026-03-14 12:23:54\"}', '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-14 12:23:54');
+(13, 1, 'CREATE', 'players', 1, NULL, '{\"jsca_player_id\":\"JSCA-P-2026-00001\",\"full_name\":\"rowhit\",\"date_of_birth\":\"2026-03-14\",\"gender\":\"Male\",\"age_category\":\"U14\",\"district_id\":\"2\",\"role\":\"Batsman\",\"batting_style\":\"Right-hand\",\"bowling_style\":\"Right-arm Fast\",\"aadhaar_number\":\"312312312312\",\"phone\":\"6206086679\",\"email\":\"Ghgsa@gmail.com\",\"address\":\"ranchi\",\"guardian_name\":\"rk\",\"guardian_phone\":\"4234234234234\",\"photo_path\":\"uploads\\/players\\/1773491034_cf0c9ab476d0593b60dc.jpg\",\"registered_by\":\"1\",\"created_at\":\"2026-03-14 12:23:54\"}', '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-14 12:23:54'),
+(14, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-16 04:27:01'),
+(15, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-16 11:54:04'),
+(16, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-17 07:09:33'),
+(17, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-17 09:22:07'),
+(18, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-17 13:07:00'),
+(19, 1, 'CREATE', 'players', 2, NULL, '{\"jsca_player_id\":\"JSCA-P-2026-00002\",\"full_name\":\"riya\",\"date_of_birth\":\"2026-03-17\",\"gender\":\"Female\",\"age_category\":\"U14\",\"district_id\":\"3\",\"role\":\"All-rounder\",\"batting_style\":\"Right-hand\",\"bowling_style\":\"N\\/A\",\"aadhaar_number\":\"342222222222\",\"phone\":\"1222222222124\",\"email\":\"Ghgsa@gmail.com\",\"address\":\"dasdasdasdasdas\",\"guardian_name\":\"rjk\",\"guardian_phone\":\"5345335345345\",\"photo_path\":null,\"registered_by\":\"1\",\"created_at\":\"2026-03-17 13:22:29\"}', '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-17 13:22:29'),
+(20, 1, 'CREATE', 'players', 3, NULL, '{\"jsca_player_id\":\"JSCA-P-2026-00003\",\"full_name\":\"sukuna\",\"date_of_birth\":\"2002-01-17\",\"gender\":\"Male\",\"age_category\":\"Senior\",\"district_id\":\"8\",\"role\":\"Batsman\",\"batting_style\":\"Right-hand\",\"bowling_style\":\"N\\/A\",\"aadhaar_number\":\"123123123123\",\"phone\":\"6206086679\",\"email\":\"d@gmail.com\",\"address\":\"dasdasd, asdasdasdasd, Jharkhand, PIN: 321231\",\"guardian_name\":\"dasdasd\",\"guardian_phone\":\"6206086679\",\"photo_path\":null,\"registered_by\":\"1\",\"created_at\":\"2026-03-17 13:30:26\"}', '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-17 13:30:26'),
+(21, 1, 'CREATE', 'coaches', 1, NULL, '{\"jsca_coach_id\":\"JSCA-C-2026-0001\",\"full_name\":\"gojo\",\"date_of_birth\":\"2026-03-04\",\"gender\":\"Male\",\"phone\":\"6206086679\",\"email\":\"admin@school.com\",\"address\":\"ranhdi adnkasld dasjda \",\"district_id\":\"4\",\"specialization\":\"General\",\"level\":\"Head Coach\",\"bcci_coach_id\":\"312312312\",\"aadhaar_number\":\"312333333333\",\"experience_years\":2,\"previous_teams\":\"dasdas adsdas \",\"achievements\":\"dasdas das asdasdsad\",\"photo_path\":\"uploads\\/coaches\\/1773754374_94305e75ff7fd306bd0b.jpg\",\"registered_by\":\"1\",\"created_at\":\"2026-03-17 13:32:54\"}', '172.19.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', '2026-03-17 13:32:54'),
+(22, 1, 'LOGIN', 'auth', 1, NULL, NULL, '172.18.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', '2026-03-21 04:26:55');
 
 -- --------------------------------------------------------
 
@@ -130,6 +194,13 @@ CREATE TABLE `coaches` (
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
   `updated_at` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `coaches`
+--
+
+INSERT INTO `coaches` (`id`, `jsca_coach_id`, `full_name`, `date_of_birth`, `gender`, `phone`, `email`, `address`, `district_id`, `photo_path`, `specialization`, `level`, `bcci_coach_id`, `aadhaar_number`, `aadhaar_verified`, `experience_years`, `previous_teams`, `achievements`, `status`, `registered_by`, `created_at`, `updated_at`) VALUES
+(1, 'JSCA-C-2026-0001', 'gojo', '2026-03-04', 'Male', '6206086679', 'admin@school.com', 'ranhdi adnkasld dasjda ', 4, 'uploads/coaches/1773754374_94305e75ff7fd306bd0b.jpg', 'General', 'Head Coach', '312312312', '312333333333', 0, 2, 'dasdas adsdas ', 'dasdas das asdasdsad', 'Active', 1, '2026-03-17 13:32:54', '2026-03-17 13:32:54');
 
 -- --------------------------------------------------------
 
@@ -229,6 +300,29 @@ CREATE TABLE `fixtures` (
   `created_at` datetime DEFAULT current_timestamp(),
   `updated_at` datetime DEFAULT NULL ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ledger_heads`
+--
+
+CREATE TABLE `ledger_heads` (
+  `id` int(11) NOT NULL,
+  `group_id` varchar(10) NOT NULL,
+  `name` varchar(100) NOT NULL,
+  `opening_balance` decimal(12,2) DEFAULT 0.00,
+  `balance_type` enum('Dr','Cr') DEFAULT 'Dr',
+  `created_at` datetime DEFAULT NULL,
+  `updated_at` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `ledger_heads`
+--
+
+INSERT INTO `ledger_heads` (`id`, `group_id`, `name`, `opening_balance`, `balance_type`, `created_at`, `updated_at`) VALUES
+(1, 'G1', 'XYZ ', 5401.12, 'Dr', '2026-03-21 08:24:23', NULL);
 
 -- --------------------------------------------------------
 
@@ -368,7 +462,9 @@ CREATE TABLE `players` (
 --
 
 INSERT INTO `players` (`id`, `jsca_player_id`, `full_name`, `date_of_birth`, `gender`, `age_category`, `district_id`, `role`, `batting_style`, `bowling_style`, `aadhaar_number`, `aadhaar_verified`, `digilocker_id`, `photo_path`, `address`, `guardian_name`, `guardian_phone`, `email`, `phone`, `status`, `selection_pool`, `registered_by`, `created_at`, `updated_at`) VALUES
-(1, 'JSCA-P-2026-00001', 'rowhit', '2026-03-14', 'Male', 'U14', 2, 'Batsman', 'Right-hand', 'Right-arm Fast', '312312312312', 0, NULL, 'uploads/players/1773491034_cf0c9ab476d0593b60dc.jpg', 'ranchi', 'rk', '4234234234234', 'Ghgsa@gmail.com', '6206086679', 'Active', 'None', 1, '2026-03-14 12:23:54', NULL);
+(1, 'JSCA-P-2026-00001', 'rowhit', '2026-03-14', 'Male', 'U14', 2, 'Batsman', 'Right-hand', 'Right-arm Fast', '312312312312', 0, NULL, 'uploads/players/1773491034_cf0c9ab476d0593b60dc.jpg', 'ranchi', 'rk', '4234234234234', 'Ghgsa@gmail.com', '6206086679', 'Active', 'None', 1, '2026-03-14 12:23:54', NULL),
+(2, 'JSCA-P-2026-00002', 'riya', '2026-03-17', 'Female', 'U14', 3, 'All-rounder', 'Right-hand', 'N/A', '342222222222', 0, NULL, NULL, 'dasdasdasdasdas', 'rjk', '5345335345345', 'Ghgsa@gmail.com', '1222222222124', 'Active', 'None', 1, '2026-03-17 13:22:29', NULL),
+(3, 'JSCA-P-2026-00003', 'sukuna', '2002-01-17', 'Male', 'Senior', 8, 'Batsman', 'Right-hand', 'N/A', '123123123123', 0, NULL, NULL, 'dasdasd, asdasdasdasd, Jharkhand, PIN: 321231', 'dasdasd', '6206086679', 'd@gmail.com', '6206086679', 'Active', 'None', 1, '2026-03-17 13:30:26', NULL);
 
 -- --------------------------------------------------------
 
@@ -399,7 +495,9 @@ CREATE TABLE `player_career_stats` (
 --
 
 INSERT INTO `player_career_stats` (`id`, `player_id`, `matches`, `runs`, `highest_score`, `batting_avg`, `strike_rate`, `fifties`, `hundreds`, `wickets`, `best_bowling`, `bowling_avg`, `economy`, `catches`, `last_updated`) VALUES
-(1, 1, 0, 0, 0, 0.00, 0.00, 0, 0, 0, NULL, 0.00, 0.00, 0, '2026-03-14 12:23:54');
+(1, 1, 0, 0, 0, 0.00, 0.00, 0, 0, 0, NULL, 0.00, 0.00, 0, '2026-03-14 12:23:54'),
+(2, 2, 0, 0, 0, 0.00, 0.00, 0, 0, 0, NULL, 0.00, 0.00, 0, '2026-03-17 13:22:29'),
+(3, 3, 0, 0, 0, 0.00, 0.00, 0, 0, 0, NULL, 0.00, 0.00, 0, '2026-03-17 13:30:26');
 
 -- --------------------------------------------------------
 
@@ -610,7 +708,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `role_id`, `full_name`, `email`, `phone`, `password_hash`, `is_active`, `last_login`, `reset_token`, `reset_expires`, `created_at`, `updated_at`) VALUES
-(1, 1, 'JSCA Super Admin', 'admin@jsca.in', '9000000001', '$2y$10$GIe68NrFKjr14UXXAUCqHufkk6gBxgZWYD9OxpcIMvhAkfyIPl.Vi', 1, '2026-03-14 11:50:10', NULL, NULL, '2026-03-09 18:15:09', '2026-03-14 11:50:10');
+(1, 1, 'JSCA Super Admin', 'admin@jsca.in', '9000000001', '$2y$10$GIe68NrFKjr14UXXAUCqHufkk6gBxgZWYD9OxpcIMvhAkfyIPl.Vi', 1, '2026-03-21 04:26:55', NULL, NULL, '2026-03-09 18:15:09', '2026-03-21 04:26:55');
 
 -- --------------------------------------------------------
 
@@ -653,6 +751,12 @@ INSERT INTO `venues` (`id`, `name`, `district_id`, `capacity`, `has_floodlights`
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `account_groups`
+--
+ALTER TABLE `account_groups`
+  ADD PRIMARY KEY (`G_Name`);
 
 --
 -- Indexes for table `audit_logs`
@@ -716,6 +820,13 @@ ALTER TABLE `fixtures`
   ADD KEY `scorer_id` (`scorer_id`),
   ADD KEY `referee_id` (`referee_id`),
   ADD KEY `idx_tournament_date` (`tournament_id`,`match_date`);
+
+--
+-- Indexes for table `ledger_heads`
+--
+ALTER TABLE `ledger_heads`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `group_id` (`group_id`);
 
 --
 -- Indexes for table `live_matches`
@@ -864,7 +975,7 @@ ALTER TABLE `venues`
 -- AUTO_INCREMENT for table `audit_logs`
 --
 ALTER TABLE `audit_logs`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `batting_stats`
@@ -882,7 +993,7 @@ ALTER TABLE `bowling_stats`
 -- AUTO_INCREMENT for table `coaches`
 --
 ALTER TABLE `coaches`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `coach_documents`
@@ -901,6 +1012,12 @@ ALTER TABLE `districts`
 --
 ALTER TABLE `fixtures`
   MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `ledger_heads`
+--
+ALTER TABLE `ledger_heads`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `live_matches`
@@ -930,13 +1047,13 @@ ALTER TABLE `payment_vouchers`
 -- AUTO_INCREMENT for table `players`
 --
 ALTER TABLE `players`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `player_career_stats`
 --
 ALTER TABLE `player_career_stats`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `player_documents`
@@ -1042,6 +1159,12 @@ ALTER TABLE `fixtures`
   ADD CONSTRAINT `fixtures_ibfk_6` FOREIGN KEY (`umpire2_id`) REFERENCES `officials` (`id`),
   ADD CONSTRAINT `fixtures_ibfk_7` FOREIGN KEY (`scorer_id`) REFERENCES `officials` (`id`),
   ADD CONSTRAINT `fixtures_ibfk_8` FOREIGN KEY (`referee_id`) REFERENCES `officials` (`id`);
+
+--
+-- Constraints for table `ledger_heads`
+--
+ALTER TABLE `ledger_heads`
+  ADD CONSTRAINT `ledger_heads_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `account_groups` (`G_Name`);
 
 --
 -- Constraints for table `live_matches`
