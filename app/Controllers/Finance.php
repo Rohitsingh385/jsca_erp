@@ -105,7 +105,7 @@ class Finance extends BaseController
             'payee_name'  => 'required|min_length[3]',
             'payee_type'  => 'required',
             'amount'      => 'required|decimal|greater_than[0]',
-            'bank_account'=> 'permit_empty|min_length[9]',
+            'bank_account' => 'permit_empty|min_length[9]',
             'bank_ifsc'   => 'permit_empty|min_length[11]|max_length[11]',
         ];
 
@@ -116,7 +116,7 @@ class Finance extends BaseController
         $post = $this->request->getPost();
 
         $data = [
-            'voucher_number'=> $this->generateVoucherNumber(),
+            'voucher_number' => $this->generateVoucherNumber(),
             'fixture_id'    => $post['fixture_id']    ?: null,
             'tournament_id' => $post['tournament_id'] ?: null,
             'official_id'   => $post['official_id']   ?: null,
@@ -165,7 +165,7 @@ class Finance extends BaseController
         return $this->render('finance/voucher_view', [
             'pageTitle' => 'Voucher ' . $voucher['voucher_number'],
             'voucher'   => $voucher,
-            'canApprove'=> $this->can('finance.approve'),
+            'canApprove' => $this->can('finance.approve'),
         ]);
     }
 
@@ -249,7 +249,7 @@ class Finance extends BaseController
             ->join('officials o2', 'o2.id = f.umpire2_id', 'left')
             ->join('officials sc', 'sc.id = f.scorer_id',  'left')
             ->join('officials rf', 'rf.id = f.referee_id', 'left')
-            ->join('tournaments t','t.id = f.tournament_id')
+            ->join('tournaments t', 't.id = f.tournament_id')
             ->where('f.id', $fixtureId)
             ->get()->getRowArray();
 
@@ -353,5 +353,78 @@ class Finance extends BaseController
     {
         return (float)$this->db->table('payment_vouchers')
             ->where('status', $status)->selectSum('amount')->get()->getRowArray()['amount'] ?? 0;
+    }
+
+
+    public function accgroups()
+    {
+        $groups = $this->db->table('account_groups')
+            ->select('*')
+            ->orderby('(CAST(SUBSTRING(G_Name, 2) AS UNSIGNED)) ASC')
+            ->get()
+            ->getResultArray();
+
+        return $this->render('finance/accgroups', [
+            'groups' => $groups
+        ]);
+    }
+
+    public function storeaccGroup()
+    {
+        $row = $this->db->table('account_groups')
+            ->select('(MAX(CAST(SUBSTRING(G_Name, 2) AS UNSIGNED)) + 1) AS new_id')
+            ->get()
+            ->getRow();
+
+        $gpid = 'G' . ($row->new_id ?? 1);
+
+        $this->db->table('account_groups')->insert([
+            'G_Name' => $gpid,
+            'Acc_Name' => $this->request->getPost('name'),
+            'Acc_Type' => $this->request->getPost('acc_type'),
+            'YesNo' => 'No'
+        ]);
+
+        return redirect()->back()->with('success', 'Group created');
+    }
+
+    public function deleteaccGroup($G_Name)
+    {
+        $this->db->table('account_groups')->delete(['G_Name' => $G_Name]);
+        return redirect()->back()->with('success', 'Deleted');
+    }
+
+    public function ledgerHeads()
+    {
+        $ledgers = $this->db->table('ledger_heads l')
+            ->select('l.*, g.Acc_Name as group_name')
+            ->join('account_groups g', 'g.G_Name = l.group_id')
+            ->get()->getResultArray();
+
+        $groups = $this->db->table('account_groups')->get()->getResultArray();
+
+        return $this->render('finance/ledger_heads', [
+            'ledgers' => $ledgers,
+            'groups'  => $groups
+        ]);
+    }
+
+    public function storeLedger()
+    {
+        $this->db->table('ledger_heads')->insert([
+            'group_id' => $this->request->getPost('group_id'),
+            'name' => $this->request->getPost('name'),
+            'opening_balance' => $this->request->getPost('opening_balance'),
+            'balance_type' => $this->request->getPost('balance_type'),
+            'created_at' => date('Y-m-d H:i:s')
+        ]);
+
+        return redirect()->back()->with('success', 'Ledger created');
+    }
+
+    public function deleteLedger($id)
+    {
+        $this->db->table('ledger_heads')->delete(['id' => $id]);
+        return redirect()->back()->with('success', 'Deleted');
     }
 }
