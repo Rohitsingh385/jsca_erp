@@ -1,44 +1,64 @@
 <!-- app/Views/matches/live.php -->
 <style>
   .live-dot {
-    width: 8px; height: 8px;
+    width: 8px;
+    height: 8px;
     background: #e74c3c;
     border-radius: 50%;
     display: inline-block;
     animation: pulse 1.4s infinite;
     margin-right: 6px;
   }
+
   @keyframes pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: .5; transform: scale(1.3); }
+
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    50% {
+      opacity: .5;
+      transform: scale(1.3);
+    }
   }
+
   .match-card {
     background: #fff;
     border-radius: 10px;
-    box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    box-shadow: 0 1px 6px rgba(0, 0, 0, .07);
     padding: 18px 20px;
     margin-bottom: 12px;
     border-left: 3px solid #e74c3c;
   }
+
   .match-card.local-card {
     border-left-color: #1a3a5c;
   }
+
   .match-card .teams {
     font-size: 15px;
     font-weight: 700;
     color: #1a3a5c;
   }
+
   .match-card .score-line {
     font-size: 13px;
     color: #444;
     margin-top: 4px;
   }
+
   .match-card .meta {
     font-size: 11px;
     color: #999;
     margin-top: 6px;
   }
-  .match-card .meta span { margin-right: 14px; }
+
+  .match-card .meta span {
+    margin-right: 14px;
+  }
+
   .section-label {
     font-size: 11px;
     font-weight: 700;
@@ -48,11 +68,16 @@
     margin-bottom: 12px;
     margin-top: 4px;
   }
+
   .refresh-bar {
     font-size: 12px;
     color: #aaa;
   }
-  .refresh-bar #countdown { font-weight: 600; color: #666; }
+
+  .refresh-bar #countdown {
+    font-weight: 600;
+    color: #666;
+  }
 </style>
 
 <!-- Top bar -->
@@ -117,8 +142,8 @@
 <?php else: ?>
   <?php foreach ($localMatches as $m): ?>
     <?php
-      $teamA = $m['team_a_name'] ?: $m['team_a_custom'];
-      $teamB = $m['team_b_name'] ?: $m['team_b_custom'];
+    $teamA = $m['team_a_name'] ?: $m['team_a_custom'];
+    $teamB = $m['team_b_name'] ?: $m['team_b_custom'];
     ?>
     <div class="match-card local-card">
       <div class="d-flex justify-content-between align-items-start">
@@ -214,7 +239,11 @@
             <div class="col-5">
               <label class="form-label" style="font-size:12px;font-weight:600;">Format</label>
               <select name="match_type" class="form-select form-select-sm">
-                <option>T20</option><option>ODI</option><option>Test</option><option>T10</option><option>Other</option>
+                <option>T20</option>
+                <option>ODI</option>
+                <option>Test</option>
+                <option>T10</option>
+                <option>Other</option>
               </select>
             </div>
             <div class="col-7">
@@ -298,21 +327,26 @@
   document.getElementById('editMatchModal').addEventListener('show.bs.modal', function(e) {
     const btn = e.relatedTarget;
     document.getElementById('editMatchForm').action = '<?= base_url('matches/live/update/') ?>' + btn.dataset.id;
-    document.getElementById('editMatchTeams').textContent  = btn.dataset.team_a + ' vs ' + btn.dataset.team_b;
-    document.getElementById('editLabelA').textContent      = btn.dataset.team_a;
-    document.getElementById('editLabelB').textContent      = btn.dataset.team_b;
-    document.getElementById('edit_team_a_score').value     = btn.dataset.team_a_score;
-    document.getElementById('edit_team_b_score').value     = btn.dataset.team_b_score;
-    document.getElementById('edit_status').value           = btn.dataset.status;
-    document.getElementById('edit_notes').value            = btn.dataset.notes;
+    document.getElementById('editMatchTeams').textContent = btn.dataset.team_a + ' vs ' + btn.dataset.team_b;
+    document.getElementById('editLabelA').textContent = btn.dataset.team_a;
+    document.getElementById('editLabelB').textContent = btn.dataset.team_b;
+    document.getElementById('edit_team_a_score').value = btn.dataset.team_a_score;
+    document.getElementById('edit_team_b_score').value = btn.dataset.team_b_score;
+    document.getElementById('edit_status').value = btn.dataset.status;
+    document.getElementById('edit_notes').value = btn.dataset.notes;
   });
 
-  // Countdown + auto-refresh
   let secs = 60;
   const cd = document.getElementById('countdown');
-  setInterval(() => {
+
+  const timer = setInterval(() => {
     secs--;
+
     if (cd) cd.textContent = secs;
-    if (secs <= 0) location.reload();
+
+    if (secs <= 0) {
+      clearInterval(timer); // stop interval
+      location.reload(); // reload page
+    }
   }, 1000);
 </script>
