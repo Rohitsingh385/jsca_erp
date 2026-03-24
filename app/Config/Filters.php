@@ -87,7 +87,7 @@ class Filters extends BaseFilters
     public array $globals = [
         'before' => [
             'csrf',        // optional
-            'auth' => ['except' => ['login', 'doLogin', 'forgot-password', 'sendReset', 'reset-password/*']],
+            'auth' => ['except' => ['login', 'doLogin', 'forgot-password', 'sendReset', 'reset-password/*', 'player-register', 'player-register/*']],
         ],
         'after'  => [
             'toolbar',

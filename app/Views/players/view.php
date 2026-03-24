@@ -24,6 +24,13 @@
   </a>
   <div class="d-flex gap-2">
     <a href="<?= base_url('players/edit/' . $player['id']) ?>" class="btn btn-sm btn-outline-secondary">Edit Profile</a>
+    <?php if (($player['status'] ?? '') === 'Inactive' && ($player['registration_type'] ?? '') === 'self'): ?>
+      <form method="post" action="<?= base_url('players/verify/' . $player['id']) ?>"
+        onsubmit="return confirm('Verify and activate this player?')">
+        <?= csrf_field() ?>
+        <button class="btn btn-sm btn-success"><i class="bi bi-patch-check me-1"></i>Verify & Activate</button>
+      </form>
+    <?php endif; ?>
     <?php if ($player['status'] === 'Active'): ?>
       <form method="post" action="<?= base_url('players/delete/' . $player['id']) ?>"
         onsubmit="return confirm('Deactivate this player?')">
@@ -55,6 +62,12 @@
               <h5 class="mb-0 fw-bold"><?= esc($player['full_name']) ?></h5>
               <span class="badge <?= $player['status'] === 'Active' ? 'bg-success' : 'bg-secondary' ?>"
                 style="font-size:10px;"><?= esc($player['status']) ?></span>
+              <?php if (($player['registration_type'] ?? '') === 'self' && $player['status'] === 'Inactive'): ?>
+                <span class="badge bg-warning text-dark" style="font-size:10px;">Pending Verification</span>
+              <?php endif; ?>
+              <?php if (($player['registration_type'] ?? '') === 'self'): ?>
+                <span class="badge bg-info text-dark" style="font-size:10px;">Self Registered</span>
+              <?php endif; ?>
               <?php if ($player['aadhaar_verified']): ?>
                 <span class="text-success" style="font-size:12px;" title="Aadhaar Verified">
                   <i class="bi bi-patch-check-fill"></i>

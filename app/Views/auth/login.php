@@ -108,6 +108,10 @@
             <div class="text-center mt-4" style="font-size:11px;color:#aaa;">
               JSCA Solutioning ERP Solution &nbsp;|&nbsp; v1.0.0
             </div>
+            <hr class="my-3">
+            <div class="text-center" style="font-size:13px;">
+              New player? <a href="<?= base_url('player-register') ?>" style="color:#1a3a5c;font-weight:600;">Register here</a>
+            </div>
           </div>
         </div>
       </div>

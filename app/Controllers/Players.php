@@ -160,6 +160,21 @@ class Players extends BaseController
             'created_at'      => date('Y-m-d H:i:s'),
         ];
 
+        // Generate user account for the player
+        $plainPassword = $this->generatePassword();
+        $this->db->table('users')->insert([
+            'role_id'       => $this->getDefaultPlayerRoleId(),
+            'full_name'     => $post['full_name'],
+            'email'         => $post['email'] ?? ($data['jsca_player_id'] . '@jsca.in'),
+            'phone'         => $post['phone'] ?? null,
+            'password_hash' => password_hash($plainPassword, PASSWORD_BCRYPT),
+            'is_active'     => 1,
+            'created_at'    => date('Y-m-d H:i:s'),
+        ]);
+        $userId = $this->db->insertID();
+        $data['user_id']           = $userId;
+        $data['registration_type'] = 'manual';
+
         $this->db->table('players')->insert($data);
         $playerId = $this->db->insertID();
 
@@ -168,8 +183,15 @@ class Players extends BaseController
 
         $this->audit('CREATE', 'players', $playerId, null, $data);
 
+        // Send credentials email if email provided
+        if (!empty($post['email'])) {
+            (new \App\Libraries\EmailHelper())->sendPlayerCredentials(
+                $post['email'], $post['full_name'], $data['jsca_player_id'], $plainPassword
+            );
+        }
+
         return redirect()->to('/players/view/' . $playerId)
-            ->with('success', 'Player ' . $data['jsca_player_id'] . ' registered successfully!');
+            ->with('success', 'Player ' . $data['jsca_player_id'] . ' registered. Credentials sent to email.');
     }
 
     // ── GET /players/view/:id ────────────────────────────────
@@ -443,6 +465,62 @@ class Players extends BaseController
         $this->db->table('player_documents')->where('id', $docId)->delete();
         $this->audit('DOC_DELETED', 'players', $doc['player_id'], $doc);
         return redirect()->to('players/view/' . $doc['player_id'])->with('success', 'Document removed.');
+    }
+
+    // ── POST /players/verify/:id ────────────────────────────
+    // Admin activates a self-registered player
+    public function verify(int $id)
+    {
+        $this->requirePermission('players');
+
+        $player = $this->db->table('players')->where('id', $id)->get()->getRowArray();
+        if (!$player) return redirect()->back()->with('error', 'Player not found.');
+
+        $this->db->table('players')->where('id', $id)->update([
+            'status'      => 'Active',
+            'verified_by' => session('user_id'),
+            'verified_at' => date('Y-m-d H:i:s'),
+            'updated_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        // Activate the linked user account
+        if (!empty($player['user_id'])) {
+            $this->db->table('users')->where('id', $player['user_id'])->update(['is_active' => 1]);
+        }
+
+        $this->audit('VERIFY', 'players', $id, null, [
+            'verified_by' => session('user_id'),
+            'verified_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        // Send activation email
+        if (!empty($player['email'])) {
+            (new \App\Libraries\EmailHelper())->sendAccountActivated(
+                $player['email'], $player['full_name'], $player['jsca_player_id']
+            );
+        }
+
+        return redirect()->to('/players/view/' . $id)
+            ->with('success', 'Player verified and account activated.');
+    }
+
+    // ── Private helpers ───────────────────────────────────────
+    private function generatePassword(int $length = 10): string
+    {
+        $chars = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789@#!';
+        $pw    = '';
+        for ($i = 0; $i < $length; $i++) {
+            $pw .= $chars[random_int(0, strlen($chars) - 1)];
+        }
+        return $pw;
+    }
+
+    private function getDefaultPlayerRoleId(): int
+    {
+        $role = $this->db->table('roles')->where('name', 'player')->get()->getRowArray();
+        if ($role) return (int)$role['id'];
+        $role = $this->db->table('roles')->where('name', 'selector')->get()->getRowArray();
+        return $role ? (int)$role['id'] : 3;
     }
 
     // ── Recalculate career stats ─────────────────────────────

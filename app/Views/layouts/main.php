@@ -277,6 +277,15 @@
   <div class="nav-section">Players</div>
   <a href="<?= base_url('players') ?>" class="nav-link <?= str_starts_with(uri_string(), 'players') ? 'active' : '' ?>">
     <i class="bi bi-people"></i> Player Registry
+    <?php
+      $pendingPlayers = \Config\Database::connect()
+        ->table('players')
+        ->where('status', 'Inactive')
+        ->where('registration_type', 'self')
+        ->countAllResults();
+      if ($pendingPlayers > 0): ?>
+        <span class="badge bg-warning text-dark ms-auto"><?= $pendingPlayers ?></span>
+    <?php endif; ?>
   </a>
   <a href="<?= base_url('players/create') ?>" class="nav-link <?= uri_string() === 'players/create' ? 'active' : '' ?>">
     <i class="bi bi-person-plus"></i> Register Player

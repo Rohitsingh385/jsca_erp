@@ -14,6 +14,15 @@ $routes->post('forgot-password', 'Auth::sendReset');
 $routes->get('reset-password/(:segment)',  'Auth::resetPassword/$1');
 $routes->post('reset-password/(:segment)', 'Auth::doReset/$1');
 
+// ─── Player self-registration (public) ──────────────────────
+$routes->get('player-register',             'PlayerSelfRegister::index');
+$routes->post('player-register/send-otp',   'PlayerSelfRegister::sendOtp');
+$routes->get('player-register/verify-otp',  'PlayerSelfRegister::verifyOtpForm');
+$routes->post('player-register/verify-otp', 'PlayerSelfRegister::verifyOtp');
+$routes->get('player-register/form',        'PlayerSelfRegister::form');
+$routes->post('player-register/submit',     'PlayerSelfRegister::submit');
+$routes->get('player-register/success',     'PlayerSelfRegister::success');
+
 // ─── Authenticated routes ────────────────────────────────────
 $routes->group('', ['filter' => 'auth'], function ($routes) {
 
@@ -28,8 +37,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('view/(:num)',    'Players::view/$1');
         $routes->get('edit/(:num)',    'Players::edit/$1');
         $routes->post('update/(:num)', 'Players::update/$1');
-        $routes->post('delete/(:num)', 'Players::delete/$1');
-        $routes->get('verify-aadhaar/(:num)',  'Players::verifyAadhaar/$1');
+        $routes->post('delete/(:num)',         'Players::delete/$1');
+        $routes->post('verify/(:num)',          'Players::verify/$1');
+        $routes->get('verify-aadhaar/(:num)',   'Players::verifyAadhaar/$1');
         $routes->get('export',                  'Players::export');
         $routes->get('stats/(:num)',            'Players::stats/$1');
         $routes->post('upload-doc/(:num)',      'Players::uploadDoc/$1');
