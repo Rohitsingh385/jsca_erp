@@ -21,14 +21,13 @@ class Tournaments extends BaseController
 
         if ($search)   $builder->groupStart()->like('t.name', $search)->orLike('t.jsca_tournament_id', $search)->groupEnd();
         if ($status)   $builder->where('t.status', $status);
-        if ($category) $builder->where('t.category', $category);
+        if ($category) $builder->where('t.age_category', $category);
         if ($format)   $builder->where('t.format', $format);
-
-        $tournaments = $builder->get()->getResultArray();
 
         return $this->render('tournaments/index', [
             'pageTitle'   => 'Tournaments — JSCA ERP',
-            'tournaments' => $tournaments,
+            'tournaments' => $builder->get()->getResultArray(),
+            'canManage'   => $this->can('tournaments'),
             'search'      => $search,
             'status'      => $status,
             'category'    => $category,
@@ -40,9 +39,11 @@ class Tournaments extends BaseController
     public function create()
     {
         $this->requirePermission('tournaments');
-        return $this->render('tournaments/create', [
-            'pageTitle' => 'Create Tournament — JSCA ERP',
-            'venues'    => $this->db->table('venues')->where('is_active', 1)->orderBy('name')->get()->getResultArray(),
+
+        return $this->render('tournaments/form', [
+            'pageTitle'  => 'Create Tournament — JSCA ERP',
+            'tournament' => null,
+            'venues'     => $this->db->table('venues')->where('is_active', 1)->orderBy('name')->get()->getResultArray(),
         ]);
     }
 
@@ -52,12 +53,24 @@ class Tournaments extends BaseController
         $this->requirePermission('tournaments');
 
         $rules = [
-            'name'       => 'required|min_length[3]|max_length[150]',
-            'format'     => 'required',
-            'category'   => 'required',
-            'start_date' => 'permit_empty|valid_date[Y-m-d]',
-            'end_date'   => 'permit_empty|valid_date[Y-m-d]',
+            'name'                  => 'required|min_length[3]|max_length[200]',
+            'season'                => 'required|max_length[10]',
+            'age_category'          => 'required|in_list[U14,U16,U19,Senior,Masters,Women]',
+            'gender'                => 'required|in_list[Male,Female,Mixed]',
+            'format'                => 'required|in_list[T10,T20,ODI-40,ODI-50,Test,Custom]',
+            'structure'             => 'required|in_list[Round Robin,Knockout,Group+Knockout,League+Playoffs,Zonal]',
+            'overs'                 => 'permit_empty|is_natural_no_zero',
+            'start_date'            => 'permit_empty|valid_date[Y-m-d]',
+            'end_date'              => 'permit_empty|valid_date[Y-m-d]',
+            'registration_deadline' => 'permit_empty|valid_date[Y-m-d]',
+            'max_teams'             => 'permit_empty|is_natural_no_zero',
+            'prize_pool'            => 'permit_empty|numeric',
+            'winner_prize'          => 'permit_empty|numeric',
+            'runner_prize'          => 'permit_empty|numeric',
+            'organizer_phone'       => 'permit_empty|regex_match[/^[6-9][0-9]{9}$/]',
+            'organizer_email'       => 'permit_empty|valid_email',
         ];
+
         if (!$this->validate($rules)) {
             return redirect()->back()->with('errors', $this->validator->getErrors())->withInput();
         }
@@ -67,43 +80,47 @@ class Tournaments extends BaseController
         $bannerPath = null;
         $banner     = $this->request->getFile('banner');
         if ($banner && $banner->isValid() && !$banner->hasMoved()) {
-            $name = $banner->getRandomName();
-            $banner->move(WRITEPATH . 'uploads/tournaments', $name);
-            $bannerPath = 'uploads/tournaments/' . $name;
+            $bannerName = $banner->getRandomName();
+            $banner->move(WRITEPATH . 'uploads/tournaments', $bannerName);
+            $bannerPath = 'uploads/tournaments/' . $bannerName;
         }
 
         $data = [
-            'jsca_tournament_id' => $this->generateTournamentId(),
-            'name'               => $post['name'],
-            'short_name'         => $post['short_name']       ?? null,
-            'edition'            => $post['edition']          ?? null,
-            'format'             => $post['format'],
-            'category'           => $post['category'],
-            'type'               => $post['type']             ?? 'League + Knockout',
-            'start_date'         => $post['start_date']       ?: null,
-            'end_date'           => $post['end_date']         ?: null,
-            'venue_id'           => $post['venue_id']         ?: null,
-            'organizer_name'     => $post['organizer_name']   ?? null,
-            'organizer_phone'    => $post['organizer_phone']  ?? null,
-            'organizer_email'    => $post['organizer_email']  ?? null,
-            'prize_pool'         => (float)($post['prize_pool']    ?? 0),
-            'winner_prize'       => (float)($post['winner_prize']  ?? 0),
-            'runner_prize'       => (float)($post['runner_prize']  ?? 0),
-            'max_teams'          => (int)($post['max_teams']       ?? 0) ?: null,
-            'overs'              => (int)($post['overs']           ?? 0) ?: null,
-            'description'        => $post['description']      ?? null,
-            'rules'              => $post['rules']            ?? null,
-            'banner_path'        => $bannerPath,
-            'status'             => 'Draft',
-            'registered_by'      => session('user_id'),
-            'created_at'         => date('Y-m-d H:i:s'),
+            'jsca_tournament_id'    => $this->generateTournamentId(),
+            'name'                  => $post['name'],
+            'short_name'            => $post['short_name']            ?: null,
+            'edition'               => $post['edition']               ?: null,
+            'season'                => $post['season'],
+            'age_category'          => $post['age_category'],
+            'gender'                => $post['gender'],
+            'format'                => $post['format'],
+            'overs'                 => $post['overs']                 ?: null,
+            'structure'             => $post['structure'],
+            'is_zonal'              => isset($post['is_zonal']) ? 1 : 0,
+            'start_date'            => $post['start_date']            ?: null,
+            'end_date'              => $post['end_date']              ?: null,
+            'registration_deadline' => $post['registration_deadline'] ?: null,
+            'venue_id'              => $post['venue_id']              ?: null,
+            'max_teams'             => $post['max_teams']             ?: null,
+            'organizer_name'        => $post['organizer_name']        ?: null,
+            'organizer_phone'       => $post['organizer_phone']       ?: null,
+            'organizer_email'       => $post['organizer_email']       ?: null,
+            'prize_pool'            => $post['prize_pool']            ?: 0,
+            'winner_prize'          => $post['winner_prize']          ?: 0,
+            'runner_prize'          => $post['runner_prize']          ?: 0,
+            'description'           => $post['description']           ?: null,
+            'rules'                 => $post['rules']                 ?: null,
+            'banner_path'           => $bannerPath,
+            'status'                => 'Draft',
+            'created_by'            => session('user_id'),
+            'created_at'            => date('Y-m-d H:i:s'),
         ];
 
         $this->db->table('tournaments')->insert($data);
         $id = $this->db->insertID();
         $this->audit('CREATE', 'tournaments', $id, null, $data);
 
-        return redirect()->to('tournaments/view/' . $id)
+        return redirect()->to('/tournaments/view/' . $id)
             ->with('success', 'Tournament ' . $data['jsca_tournament_id'] . ' created.');
     }
 
@@ -111,17 +128,17 @@ class Tournaments extends BaseController
     public function view(int $id)
     {
         $tournament = $this->db->table('tournaments t')
-            ->select('t.*, v.name as venue_name')
+            ->select('t.*, v.name as venue_name, u.full_name as created_by_name')
             ->join('venues v', 'v.id = t.venue_id', 'left')
+            ->join('users u',  'u.id = t.created_by', 'left')
             ->where('t.id', $id)
             ->get()->getRowArray();
 
-        if (!$tournament) return redirect()->to('tournaments')->with('error', 'Tournament not found.');
+        if (!$tournament) return redirect()->to('/tournaments')->with('error', 'Tournament not found.');
 
         $teams = $this->db->table('teams tm')
-            ->select('tm.*, d.name as district_name,
-                p.full_name as captain_name,
-                (SELECT COUNT(*) FROM team_players tp WHERE tp.team_id = tm.id AND tp.is_current = 1) as player_count')
+            ->select('tm.*, d.name as district_name, p.full_name as captain_name,
+                (SELECT COUNT(*) FROM team_players tp WHERE tp.team_id = tm.id) as player_count')
             ->join('districts d', 'd.id = tm.district_id', 'left')
             ->join('players p',   'p.id = tm.captain_id',  'left')
             ->where('tm.tournament_id', $id)
@@ -135,36 +152,30 @@ class Tournaments extends BaseController
             ->join('venues v',  'v.id = f.venue_id', 'left')
             ->where('f.tournament_id', $id)
             ->orderBy('f.match_date')->orderBy('f.match_time')
-            ->limit(10)
             ->get()->getResultArray();
 
-        $documents = $this->db->table('tournament_documents')
-            ->where('tournament_id', $id)
-            ->orderBy('created_at', 'DESC')
-            ->get()->getResultArray();
-
-        $availableTeams = $this->db->table('teams')
-            ->where('status', 'Active')
-            ->where('category', $tournament['category'])
-            ->whereNotIn('id', array_column($teams, 'id') ?: [0])
-            ->orderBy('name')
-            ->get()->getResultArray();
-
-        // Stats
         $stats = [
-            'total_matches'     => $this->db->table('fixtures')->where('tournament_id', $id)->countAllResults(),
-            'completed_matches' => $this->db->table('fixtures')->where('tournament_id', $id)->where('status', 'Completed')->countAllResults(),
-            'live_matches'      => $this->db->table('fixtures')->where('tournament_id', $id)->where('status', 'Live')->countAllResults(),
+            'total'     => count($fixtures),
+            'completed' => count(array_filter($fixtures, fn($f) => $f['status'] === 'Completed')),
+            'live'      => count(array_filter($fixtures, fn($f) => $f['status'] === 'Live')),
+            'scheduled' => count(array_filter($fixtures, fn($f) => $f['status'] === 'Scheduled')),
         ];
 
+        $existingIds    = array_column($teams, 'id') ?: [0];
+        $availableTeams = $this->db->table('teams')
+            ->whereNotIn('id', $existingIds)
+            ->where('status !=', 'Withdrawn')
+            ->orderBy('name')->get()->getResultArray();
+
         return $this->render('tournaments/view', [
-            'pageTitle'      => $tournament['name'],
+            'pageTitle'      => $tournament['name'] . ' — JSCA ERP',
             'tournament'     => $tournament,
             'teams'          => $teams,
             'fixtures'       => $fixtures,
-            'documents'      => $documents,
-            'availableTeams' => $availableTeams,
             'stats'          => $stats,
+            'availableTeams' => $availableTeams,
+            'canManage'      => $this->can('tournaments'),
+            'documents'      => $this->db->table('tournament_documents')->where('tournament_id', $id)->orderBy('created_at', 'DESC')->get()->getResultArray(),
         ]);
     }
 
@@ -172,10 +183,16 @@ class Tournaments extends BaseController
     public function edit(int $id)
     {
         $this->requirePermission('tournaments');
-        $tournament = $this->db->table('tournaments')->where('id', $id)->get()->getRowArray();
-        if (!$tournament) return redirect()->to('tournaments')->with('error', 'Tournament not found.');
 
-        return $this->render('tournaments/edit', [
+        $tournament = $this->db->table('tournaments')->where('id', $id)->get()->getRowArray();
+        if (!$tournament) return redirect()->to('/tournaments')->with('error', 'Tournament not found.');
+
+        if (!in_array($tournament['status'], ['Draft', 'Registration'])) {
+            return redirect()->to('/tournaments/view/' . $id)
+                ->with('error', 'Tournament details cannot be edited once fixtures are ready or the tournament is underway.');
+        }
+
+        return $this->render('tournaments/form', [
             'pageTitle'  => 'Edit Tournament — JSCA ERP',
             'tournament' => $tournament,
             'venues'     => $this->db->table('venues')->where('is_active', 1)->orderBy('name')->get()->getResultArray(),
@@ -186,95 +203,157 @@ class Tournaments extends BaseController
     public function update(int $id)
     {
         $this->requirePermission('tournaments');
-        $old = $this->db->table('tournaments')->where('id', $id)->get()->getRowArray();
-        if (!$old) return redirect()->to('tournaments')->with('error', 'Tournament not found.');
 
-        $rules = ['name' => 'required|min_length[3]|max_length[150]'];
+        $old = $this->db->table('tournaments')->where('id', $id)->get()->getRowArray();
+        if (!$old) return redirect()->to('/tournaments')->with('error', 'Tournament not found.');
+
+        if (!in_array($old['status'], ['Draft', 'Registration'])) {
+            return redirect()->to('/tournaments/view/' . $id)
+                ->with('error', 'Tournament cannot be edited in its current status.');
+        }
+
+        $rules = [
+            'name'                  => 'required|min_length[3]|max_length[200]',
+            'season'                => 'required|max_length[10]',
+            'age_category'          => 'required|in_list[U14,U16,U19,Senior,Masters,Women]',
+            'gender'                => 'required|in_list[Male,Female,Mixed]',
+            'format'                => 'required|in_list[T10,T20,ODI-40,ODI-50,Test,Custom]',
+            'structure'             => 'required|in_list[Round Robin,Knockout,Group+Knockout,League+Playoffs,Zonal]',
+            'overs'                 => 'permit_empty|is_natural_no_zero',
+            'start_date'            => 'permit_empty|valid_date[Y-m-d]',
+            'end_date'              => 'permit_empty|valid_date[Y-m-d]',
+            'registration_deadline' => 'permit_empty|valid_date[Y-m-d]',
+            'max_teams'             => 'permit_empty|is_natural_no_zero',
+            'prize_pool'            => 'permit_empty|numeric',
+            'winner_prize'          => 'permit_empty|numeric',
+            'runner_prize'          => 'permit_empty|numeric',
+            'organizer_phone'       => 'permit_empty|regex_match[/^[6-9][0-9]{9}$/]',
+            'organizer_email'       => 'permit_empty|valid_email',
+        ];
+
         if (!$this->validate($rules)) {
             return redirect()->back()->with('errors', $this->validator->getErrors())->withInput();
         }
 
         $post = $this->request->getPost();
         $data = [
-            'name'            => $post['name'],
-            'short_name'      => $post['short_name']      ?? null,
-            'edition'         => $post['edition']         ?? null,
-            'format'          => $post['format'],
-            'category'        => $post['category'],
-            'type'            => $post['type'],
-            'start_date'      => $post['start_date']      ?: null,
-            'end_date'        => $post['end_date']        ?: null,
-            'venue_id'        => $post['venue_id']        ?: null,
-            'organizer_name'  => $post['organizer_name']  ?? null,
-            'organizer_phone' => $post['organizer_phone'] ?? null,
-            'organizer_email' => $post['organizer_email'] ?? null,
-            'prize_pool'      => (float)($post['prize_pool']   ?? 0),
-            'winner_prize'    => (float)($post['winner_prize'] ?? 0),
-            'runner_prize'    => (float)($post['runner_prize'] ?? 0),
-            'max_teams'       => (int)($post['max_teams']      ?? 0) ?: null,
-            'overs'           => (int)($post['overs']          ?? 0) ?: null,
-            'description'     => $post['description']     ?? null,
-            'rules'           => $post['rules']           ?? null,
-            'status'          => $post['status'],
-            'updated_at'      => date('Y-m-d H:i:s'),
+            'name'                  => $post['name'],
+            'short_name'            => $post['short_name']            ?: null,
+            'edition'               => $post['edition']               ?: null,
+            'season'                => $post['season'],
+            'age_category'          => $post['age_category'],
+            'gender'                => $post['gender'],
+            'format'                => $post['format'],
+            'overs'                 => $post['overs']                 ?: null,
+            'structure'             => $post['structure'],
+            'is_zonal'              => isset($post['is_zonal']) ? 1 : 0,
+            'start_date'            => $post['start_date']            ?: null,
+            'end_date'              => $post['end_date']              ?: null,
+            'registration_deadline' => $post['registration_deadline'] ?: null,
+            'venue_id'              => $post['venue_id']              ?: null,
+            'max_teams'             => $post['max_teams']             ?: null,
+            'organizer_name'        => $post['organizer_name']        ?: null,
+            'organizer_phone'       => $post['organizer_phone']       ?: null,
+            'organizer_email'       => $post['organizer_email']       ?: null,
+            'prize_pool'            => $post['prize_pool']            ?: 0,
+            'winner_prize'          => $post['winner_prize']          ?: 0,
+            'runner_prize'          => $post['runner_prize']          ?: 0,
+            'description'           => $post['description']           ?: null,
+            'rules'                 => $post['rules']                 ?: null,
+            'status'                => $post['status'],
+            'updated_at'            => date('Y-m-d H:i:s'),
         ];
 
         $banner = $this->request->getFile('banner');
         if ($banner && $banner->isValid() && !$banner->hasMoved()) {
-            $name = $banner->getRandomName();
-            $banner->move(WRITEPATH . 'uploads/tournaments', $name);
-            $data['banner_path'] = 'uploads/tournaments/' . $name;
+            $bannerName = $banner->getRandomName();
+            $banner->move(WRITEPATH . 'uploads/tournaments', $bannerName);
+            $data['banner_path'] = 'uploads/tournaments/' . $bannerName;
         }
 
         $this->db->table('tournaments')->where('id', $id)->update($data);
         $this->audit('UPDATE', 'tournaments', $id, $old, $data);
-        return redirect()->to('tournaments/view/' . $id)->with('success', 'Tournament updated.');
-    }
 
-    // ── POST /tournaments/delete/:id ──────────────────────────
-    public function delete(int $id)
-    {
-        $this->requirePermission('tournaments');
-        $this->db->table('tournaments')->where('id', $id)->update([
-            'status'     => 'Cancelled',
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]);
-        $this->audit('DELETE', 'tournaments', $id);
-        return redirect()->to('tournaments')->with('success', 'Tournament cancelled.');
+        return redirect()->to('/tournaments/view/' . $id)->with('success', 'Tournament updated.');
     }
 
     // ── POST /tournaments/update-status/:id ───────────────────
     public function updateStatus(int $id)
     {
         $this->requirePermission('tournaments');
-        $status = $this->request->getPost('status');
-        $allowed = ['Draft','Registration Open','Registration Closed','Fixture Ready','Ongoing','Completed','Cancelled'];
-        if (!in_array($status, $allowed)) return redirect()->back()->with('error', 'Invalid status.');
+
+        $tournament = $this->db->table('tournaments')->where('id', $id)->get()->getRowArray();
+        if (!$tournament) return redirect()->back()->with('error', 'Tournament not found.');
+
+        $newStatus = $this->request->getPost('status');
+        $current   = $tournament['status'];
+
+        // Define valid forward transitions
+        $transitions = [
+            'Draft'         => ['Registration', 'Cancelled'],
+            'Registration'  => ['Draft', 'Fixture Ready', 'Cancelled'],
+            'Fixture Ready' => ['Ongoing', 'Registration', 'Cancelled'],
+            'Ongoing'       => ['Completed', 'Cancelled'],
+            'Completed'     => [],
+            'Cancelled'     => [],
+        ];
+
+        if (!isset($transitions[$current]) || !in_array($newStatus, $transitions[$current])) {
+            return redirect()->back()->with('error', 'Invalid status transition from "' . $current . '" to "' . $newStatus . '".');
+        }
+
+        // Moving to Fixture Ready requires at least 2 teams
+        if ($newStatus === 'Fixture Ready') {
+            $teamCount = $this->db->table('teams')->where('tournament_id', $id)->countAllResults();
+            if ($teamCount < 2) {
+                return redirect()->back()->with('error', 'At least 2 teams must be registered before marking fixtures as ready.');
+            }
+        }
 
         $this->db->table('tournaments')->where('id', $id)->update([
-            'status'     => $status,
+            'status'     => $newStatus,
             'updated_at' => date('Y-m-d H:i:s'),
         ]);
-        $this->audit('STATUS_CHANGE', 'tournaments', $id, null, ['status' => $status]);
-        return redirect()->to('tournaments/view/' . $id)->with('success', 'Status updated to ' . $status . '.');
+        $this->audit('STATUS_CHANGE', 'tournaments', $id, ['status' => $current], ['status' => $newStatus]);
+
+        return redirect()->to('/tournaments/view/' . $id)
+            ->with('success', 'Status changed to ' . $newStatus . '.');
     }
 
-    // ── GET /tournaments/teams/:id (legacy) ───────────────────
+    // ── POST /tournaments/delete/:id ──────────────────────────
+    public function delete(int $id)
+    {
+        $this->requirePermission('tournaments');
+
+        $this->db->table('tournaments')->where('id', $id)->update([
+            'status'     => 'Cancelled',
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+        $this->audit('DELETE', 'tournaments', $id);
+
+        return redirect()->to('/tournaments')->with('success', 'Tournament cancelled.');
+    }
+
+    // ── GET /tournaments/teams/:id (redirect) ─────────────────
     public function teams(int $id)
     {
-        return redirect()->to('tournaments/view/' . $id);
+        return redirect()->to('/tournaments/view/' . $id);
     }
 
     // ── POST /tournaments/add-team/:id ────────────────────────
     public function addTeam(int $id)
     {
         $this->requirePermission('tournaments');
-        $teamId = (int)$this->request->getPost('team_id');
 
         $tournament = $this->db->table('tournaments')->where('id', $id)->get()->getRowArray();
         if (!$tournament) return redirect()->back()->with('error', 'Tournament not found.');
 
-        // Check max teams
+        if (!in_array($tournament['status'], ['Draft', 'Registration'])) {
+            return redirect()->back()->with('error', 'Teams can only be added during Draft or Registration phase.');
+        }
+
+        $teamId = (int)$this->request->getPost('team_id');
+
         if ($tournament['max_teams']) {
             $current = $this->db->table('teams')->where('tournament_id', $id)->countAllResults();
             if ($current >= $tournament['max_teams']) {
@@ -282,33 +361,39 @@ class Tournaments extends BaseController
             }
         }
 
-        $this->db->table('teams')->where('id', $teamId)->update([
-            'tournament_id' => $id,
-            'updated_at'    => date('Y-m-d H:i:s'),
-        ]);
+        $this->db->table('teams')->where('id', $teamId)->update(['tournament_id' => $id]);
         $this->audit('TEAM_ADDED', 'tournaments', $id, null, ['team_id' => $teamId]);
-        return redirect()->to('tournaments/view/' . $id)->with('success', 'Team registered to tournament.');
+
+        return redirect()->to('/tournaments/view/' . $id)->with('success', 'Team added to tournament.');
     }
 
     // ── POST /tournaments/remove-team/:id/:teamId ─────────────
     public function removeTeam(int $id, int $teamId)
     {
         $this->requirePermission('tournaments');
-        $this->db->table('teams')->where('id', $teamId)->where('tournament_id', $id)->update([
-            'tournament_id' => null,
-            'updated_at'    => date('Y-m-d H:i:s'),
-        ]);
+
+        $tournament = $this->db->table('tournaments')->where('id', $id)->get()->getRowArray();
+        if (!$tournament) return redirect()->back()->with('error', 'Tournament not found.');
+
+        if (!in_array($tournament['status'], ['Draft', 'Registration'])) {
+            return redirect()->back()->with('error', 'Teams cannot be removed once the tournament is past the registration phase.');
+        }
+
+        $this->db->table('teams')->where('id', $teamId)->where('tournament_id', $id)
+            ->update(['tournament_id' => null]);
         $this->audit('TEAM_REMOVED', 'tournaments', $id, null, ['team_id' => $teamId]);
-        return redirect()->to('tournaments/view/' . $id)->with('success', 'Team removed from tournament.');
+
+        return redirect()->to('/tournaments/view/' . $id)->with('success', 'Team removed from tournament.');
     }
 
     // ── POST /tournaments/upload-doc/:id ──────────────────────
     public function uploadDoc(int $id)
     {
         $this->requirePermission('tournaments');
+
         $file = $this->request->getFile('document');
         if (!$file || !$file->isValid()) return redirect()->back()->with('error', 'Invalid file.');
-        if (!in_array(strtolower($file->getExtension()), ['jpg','jpeg','png','pdf'])) {
+        if (!in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'pdf'])) {
             return redirect()->back()->with('error', 'Only JPG, PNG or PDF allowed.');
         }
 
@@ -327,7 +412,7 @@ class Tournaments extends BaseController
         ]);
 
         $this->audit('DOC_UPLOADED', 'tournaments', $id);
-        return redirect()->to('tournaments/view/' . $id)->with('success', 'Document uploaded.');
+        return redirect()->to('/tournaments/view/' . $id)->with('success', 'Document uploaded.');
     }
 
     // ── POST /tournaments/verify-doc/:docId ───────────────────
@@ -343,7 +428,7 @@ class Tournaments extends BaseController
             'verified_at' => date('Y-m-d H:i:s'),
         ]);
         $this->audit('DOC_VERIFIED', 'tournaments', $doc['tournament_id']);
-        return redirect()->to('tournaments/view/' . $doc['tournament_id'])->with('success', 'Document verified.');
+        return redirect()->to('/tournaments/view/' . $doc['tournament_id'])->with('success', 'Document verified.');
     }
 
     // ── POST /tournaments/delete-doc/:docId ───────────────────
@@ -358,7 +443,7 @@ class Tournaments extends BaseController
 
         $this->db->table('tournament_documents')->where('id', $docId)->delete();
         $this->audit('DOC_DELETED', 'tournaments', $doc['tournament_id']);
-        return redirect()->to('tournaments/view/' . $doc['tournament_id'])->with('success', 'Document removed.');
+        return redirect()->to('/tournaments/view/' . $doc['tournament_id'])->with('success', 'Document removed.');
     }
 
     // ── Private ───────────────────────────────────────────────

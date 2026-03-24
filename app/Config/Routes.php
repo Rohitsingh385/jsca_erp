@@ -91,7 +91,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     });
 
     // ── Tournaments ───────────────────────────────────────────
-    $routes->group('tournaments', function ($routes) {
+    $routes->group('tournaments', ['filter' => 'rbac:tournaments,fixtures'], function ($routes) {
         $routes->get('/',                           'Tournaments::index');
         $routes->get('create',                      'Tournaments::create');
         $routes->post('store',                      'Tournaments::store');
