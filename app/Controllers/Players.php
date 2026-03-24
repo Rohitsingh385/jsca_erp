@@ -13,7 +13,8 @@ class Players extends BaseController
         $search   = $this->request->getGet('q');
         $category = $this->request->getGet('category');
         $district = $this->request->getGet('district');
-        $status   = $this->request->getGet('status') ?? 'Active';
+        $status   = $this->request->getGet('status'); // no default — show all by default
+        // Only apply status filter if explicitly set
         $perPage  = 25;
 
         $allowedIds = $this->getAllowedDistrictIdsFlat();
@@ -40,7 +41,11 @@ class Players extends BaseController
         }
         if ($category) $builder->where('p.age_category', $category);
         if ($district && $this->canAccessDistrict((int)$district)) $builder->where('p.district_id', $district);
-        if ($status)    $builder->where('p.status', $status);
+        if ($status === 'pending') {
+            $builder->where('p.status', 'Inactive')->where('p.registration_type', 'self');
+        } elseif ($status !== null && $status !== '') {
+            $builder->where('p.status', $status);
+        }
 
         $total   = $builder->countAllResults(false);
         $page    = (int)($this->request->getGet('page') ?? 1);
@@ -139,41 +144,48 @@ class Players extends BaseController
         ]);
         $address = implode(', ', $addressParts) ?: null;
 
-        $data = [
-            'jsca_player_id'  => $this->generatePlayerId(),
-            'full_name'       => $post['full_name'],
-            'date_of_birth'   => $post['date_of_birth'],
-            'gender'          => $post['gender'],
-            'age_category'    => $ageCategory,
-            'district_id'     => $post['district_id'],
-            'role'            => $post['role'],
-            'batting_style'   => $post['batting_style'] ?? null,
-            'bowling_style'   => $post['bowling_style'] ?? 'N/A',
-            'aadhaar_number'  => $post['aadhaar_number'] ?? null,
-            'phone'           => $post['phone'] ?? null,
-            'email'           => $post['email'] ?? null,
-            'address'         => $address,
-            'guardian_name'   => $post['guardian_name'] ?? null,
-            'guardian_phone'  => $post['guardian_phone'] ?? null,
-            'photo_path'      => $photoPath,
-            'registered_by'   => session('user_id') ?: null,
-            'created_at'      => date('Y-m-d H:i:s'),
-        ];
+        // Generate JSCA Player ID first so we can use it for fallback email
+        $jscaPlayerId = $this->generatePlayerId();
 
         // Generate user account for the player
-        $plainPassword = $this->generatePassword();
+        $plainPassword  = $this->generatePassword();
+        $playerEmail    = !empty($post['email']) ? $post['email'] : null;
+        $userEmail      = $playerEmail ?? ($jscaPlayerId . '@jsca.in');
+
         $this->db->table('users')->insert([
             'role_id'       => $this->getDefaultPlayerRoleId(),
             'full_name'     => $post['full_name'],
-            'email'         => $post['email'] ?? ($data['jsca_player_id'] . '@jsca.in'),
+            'email'         => $userEmail,
             'phone'         => $post['phone'] ?? null,
             'password_hash' => password_hash($plainPassword, PASSWORD_BCRYPT),
             'is_active'     => 1,
             'created_at'    => date('Y-m-d H:i:s'),
         ]);
         $userId = $this->db->insertID();
-        $data['user_id']           = $userId;
-        $data['registration_type'] = 'manual';
+
+        $data = [
+            'jsca_player_id'    => $jscaPlayerId,
+            'full_name'         => $post['full_name'],
+            'date_of_birth'     => $post['date_of_birth'],
+            'gender'            => $post['gender'],
+            'age_category'      => $ageCategory,
+            'district_id'       => $post['district_id'],
+            'role'              => $post['role'],
+            'batting_style'     => $post['batting_style'] ?? null,
+            'bowling_style'     => $post['bowling_style'] ?? 'N/A',
+            'aadhaar_number'    => $post['aadhaar_number'] ?? null,
+            'phone'             => $post['phone'] ?? null,
+            'email'             => $playerEmail,
+            'address'           => $address,
+            'guardian_name'     => $post['guardian_name'] ?? null,
+            'guardian_phone'    => $post['guardian_phone'] ?? null,
+            'photo_path'        => $photoPath,
+            'status'            => 'Active',
+            'registration_type' => 'manual',
+            'user_id'           => $userId,
+            'registered_by'     => session('user_id') ?: null,
+            'created_at'        => date('Y-m-d H:i:s'),
+        ];
 
         $this->db->table('players')->insert($data);
         $playerId = $this->db->insertID();
@@ -183,10 +195,10 @@ class Players extends BaseController
 
         $this->audit('CREATE', 'players', $playerId, null, $data);
 
-        // Send credentials email if email provided
-        if (!empty($post['email'])) {
+        // Send credentials email if real email provided
+        if ($playerEmail) {
             (new \App\Libraries\EmailHelper())->sendPlayerCredentials(
-                $post['email'], $post['full_name'], $data['jsca_player_id'], $plainPassword
+                $playerEmail, $post['full_name'], $jscaPlayerId, $plainPassword
             );
         }
 

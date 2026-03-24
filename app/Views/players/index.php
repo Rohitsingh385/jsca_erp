@@ -38,9 +38,11 @@
       </div>
       <div class="col-md-2">
         <select name="status" class="form-select form-select-sm">
+          <option value="">All Statuses</option>
           <?php foreach (['Active','Inactive','Suspended','Retired'] as $s): ?>
-            <option value="<?= $s ?>" <?= ($status ?? 'Active') === $s ? 'selected' : '' ?>><?= $s ?></option>
+            <option value="<?= $s ?>" <?= ($status ?? '') === $s ? 'selected' : '' ?>><?= $s ?></option>
           <?php endforeach; ?>
+          <option value="pending" <?= ($status ?? '') === 'pending' ? 'selected' : '' ?>>Pending Verification</option>
         </select>
       </div>
       <div class="col-md-2 d-flex gap-1">
@@ -106,6 +108,9 @@
                 <td>
                   <span class="badge <?= $p['status'] === 'Active' ? 'bg-success' : ($p['status'] === 'Suspended' ? 'bg-danger' : 'bg-secondary') ?>"
                     style="font-size:10px;"><?= esc($p['status']) ?></span>
+                  <?php if (($p['registration_type'] ?? '') === 'self' && $p['status'] === 'Inactive'): ?>
+                    <span class="badge bg-warning text-dark" style="font-size:10px;">Pending</span>
+                  <?php endif; ?>
                 </td>
                 <td>
                   <a href="<?= base_url('players/view/' . $p['id']) ?>" class="btn btn-sm btn-outline-secondary">View</a>
