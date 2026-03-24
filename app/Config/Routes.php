@@ -61,6 +61,17 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->post('delete-doc/(:num)',      'Coaches::deleteDoc/$1');
     });
 
+    // ── Teams ──────────────────────────────────────────────
+    $routes->group('venues', ['filter' => 'rbac:venues,fixtures'], function ($routes) {
+        $routes->get('/',              'Venues::index');
+        $routes->get('create',         'Venues::create');
+        $routes->post('store',         'Venues::store');
+        $routes->get('view/(:num)',    'Venues::view/$1');
+        $routes->get('edit/(:num)',    'Venues::edit/$1');
+        $routes->post('update/(:num)', 'Venues::update/$1');
+        $routes->post('toggle/(:num)', 'Venues::toggle/$1');
+    });
+
     // ── Teams ───────────────────────────────────────────────
     $routes->group('teams', function ($routes) {
         $routes->get('/',                           'Teams::index');
@@ -127,14 +138,14 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     });
 
     // ── Officials ─────────────────────────────────────────────
-    $routes->group('officials', function ($routes) {
+    $routes->group('officials', ['filter' => 'rbac:officials,fixtures'], function ($routes) {
         $routes->get('/',              'Officials::index');
         $routes->get('create',         'Officials::create');
         $routes->post('store',         'Officials::store');
         $routes->get('view/(:num)',    'Officials::view/$1');
         $routes->get('edit/(:num)',    'Officials::edit/$1');
         $routes->post('update/(:num)', 'Officials::update/$1');
-        $routes->get('availability/(:num)', 'Officials::availability/$1');
+        $routes->post('toggle/(:num)', 'Officials::toggle/$1');
     });
 
     // ── Finance ───────────────────────────────────────────────

@@ -299,6 +299,11 @@
     <i class="bi bi-person-plus"></i> Register Coach
   </a>
 
+  <div class="nav-section">Venues</div>
+  <a href="<?= base_url('venues') ?>" class="nav-link <?= str_starts_with(uri_string(), 'venues') ? 'active' : '' ?>">
+    <i class="bi bi-building"></i> Venues
+  </a>
+
   <div class="nav-section">Teams</div>
   <a href="<?= base_url('teams') ?>" class="nav-link <?= str_starts_with(uri_string(), 'teams') ? 'active' : '' ?>">
     <i class="bi bi-shield-fill"></i> Team Registry
@@ -323,7 +328,10 @@
 
   <div class="nav-section">Officials</div>
   <a href="<?= base_url('officials') ?>" class="nav-link <?= str_starts_with(uri_string(), 'officials') ? 'active' : '' ?>">
-    <i class="bi bi-patch-check"></i> Officials Panel
+    <i class="bi bi-patch-check"></i> Officials
+  </a>
+  <a href="<?= base_url('officials/create') ?>" class="nav-link <?= uri_string() === 'officials/create' ? 'active' : '' ?>">
+    <i class="bi bi-person-plus"></i> Add Official
   </a>
 
   <div class="nav-section">Finance</div>
