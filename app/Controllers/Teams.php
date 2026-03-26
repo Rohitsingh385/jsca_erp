@@ -194,12 +194,19 @@ class Teams extends BaseController
             ->orderBy('created_at', 'DESC')
             ->get()->getResultArray();
 
-        // Available players: match tournament age_category + same district + not already in team
+        // Available players: match age_category + same district + not in ANY team in this tournament
+        $takenPlayerIds = $this->db->table('team_players tp')
+            ->select('tp.player_id')
+            ->join('teams t', 't.id = tp.team_id')
+            ->where('t.tournament_id', $team['tournament_id'])
+            ->get()->getResultArray();
+        $takenIds = array_column($takenPlayerIds, 'player_id') ?: [0];
+
         $availableQuery = $this->db->table('players p')
             ->select('p.id, p.full_name, p.jsca_player_id, p.role, p.age_category')
             ->where('p.status', 'Active')
             ->where('p.district_id', $team['district_id'])
-            ->whereNotIn('p.id', array_column($players, 'player_id') ?: [0])
+            ->whereNotIn('p.id', $takenIds)
             ->orderBy('p.full_name');
 
         if (!empty($team['age_category'])) {
@@ -309,8 +316,25 @@ class Teams extends BaseController
         $exists = $this->db->table('team_players')
             ->where('team_id', $id)->where('player_id', $playerId)
             ->countAllResults();
-
         if ($exists) return redirect()->back()->with('error', 'Player is already in this team.');
+
+        // Block if player is already in another team in the same tournament
+        $inOtherTeam = $this->db->table('team_players tp')
+            ->join('teams t', 't.id = tp.team_id')
+            ->where('tp.player_id', $playerId)
+            ->where('t.tournament_id', $team['tournament_id'])
+            ->where('tp.team_id !=', $id)
+            ->countAllResults();
+        if ($inOtherTeam) {
+            $otherTeam = $this->db->table('teams t')
+                ->select('t.name')
+                ->join('team_players tp', 'tp.team_id = t.id')
+                ->where('tp.player_id', $playerId)
+                ->where('t.tournament_id', $team['tournament_id'])
+                ->where('t.id !=', $id)
+                ->get()->getRowArray();
+            return redirect()->back()->with('error', 'Player is already registered in "' . $otherTeam['name'] . '" for this tournament.');
+        }
 
         $this->db->table('team_players')->insert([
             'team_id'         => $id,
