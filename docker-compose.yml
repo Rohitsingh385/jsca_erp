@@ -7,6 +7,16 @@ services:
       - .:/var/www/html:cached
     depends_on:
       - db
+    command: >
+      sh -c "mkdir -p /var/www/html/public/assets/uploads/players
+             /var/www/html/public/assets/uploads/player_docs
+             /var/www/html/public/assets/uploads/coaches
+             /var/www/html/public/assets/uploads/coach_docs
+             /var/www/html/public/assets/uploads/officials
+             /var/www/html/public/assets/uploads/tournaments
+             && chown -R www-data:www-data /var/www/html/public/assets/uploads
+             && chmod -R 775 /var/www/html/public/assets/uploads
+             && apache2-foreground"
 
   db:
     image: mariadb:10.4 

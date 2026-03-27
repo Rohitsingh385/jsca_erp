@@ -49,7 +49,7 @@
       <div class="card-body">
         <div class="d-flex gap-4 align-items-center">
           <?php if ($player['photo_path']): ?>
-            <img src="<?= base_url('uploads/' . ltrim($player['photo_path'], 'uploads/')) ?>"
+            <img src="<?= base_url($player['photo_path']) ?>"
               style="width:90px;height:105px;object-fit:cover;border-radius:8px;border:2px solid #eee;">
           <?php else: ?>
             <div style="width:90px;height:105px;border-radius:8px;background:#1a3a5c;display:flex;
@@ -239,7 +239,7 @@
                 </div>
               </div>
               <div class="d-flex flex-column gap-1">
-                <a href="<?= base_url('writable/' . $doc['file_path']) ?>" target="_blank"
+                <a href="<?= base_url($doc['file_path']) ?>" target="_blank"
                    class="btn btn-xs btn-outline-secondary" style="font-size:10px;padding:2px 8px;">View</a>
                 <?php if (!$doc['verified']): ?>
                   <form method="post" action="<?= base_url('players/verify-doc/' . $doc['id']) ?>">
@@ -277,14 +277,24 @@
             <label class="form-label" style="font-size:12px;font-weight:600;">Document Type <span class="text-danger">*</span></label>
             <select name="doc_type" id="docTypeSelect" class="form-select form-select-sm" required>
               <option value="">Select type…</option>
-              <option value="aadhaar_front">Aadhaar Card — Front</option>
-              <option value="aadhaar_back">Aadhaar Card — Back</option>
-              <option value="birth_certificate">Birth Certificate</option>
-              <option value="school_certificate">School Certificate</option>
-              <option value="noc">NOC (No Objection Certificate)</option>
-              <option value="medical_fitness">Medical Fitness Certificate</option>
-              <option value="photo">Passport Photo</option>
-              <option value="other">Other</option>
+              <?php
+                $uploadedTypes = array_column($documents, 'doc_type');
+                $docTypes = [
+                  'aadhaar_front'      => 'Aadhaar Card — Front',
+                  'aadhaar_back'       => 'Aadhaar Card — Back',
+                  'birth_certificate'  => 'Birth Certificate',
+                  'school_certificate' => 'School Certificate',
+                  'noc'                => 'NOC (No Objection Certificate)',
+                  'medical_fitness'    => 'Medical Fitness Certificate',
+                  'photo'              => 'Passport Photo',
+                  'other'              => 'Other',
+                ];
+                foreach ($docTypes as $val => $label):
+                  // Hide already uploaded types (except 'other' which can be uploaded multiple times)
+                  if ($val !== 'other' && in_array($val, $uploadedTypes)) continue;
+              ?>
+                <option value="<?= $val ?>"><?= $label ?></option>
+              <?php endforeach; ?>
             </select>
           </div>
           <div class="mb-3" id="labelField" style="display:none;">

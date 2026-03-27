@@ -39,7 +39,7 @@
       <div class="card-body">
         <div class="d-flex gap-4 align-items-center">
           <?php if ($coach['photo_path']): ?>
-            <img src="<?= base_url('uploads/' . ltrim($coach['photo_path'], 'uploads/')) ?>"
+            <img src="<?= base_url($coach['photo_path']) ?>"
               style="width:90px;height:105px;object-fit:cover;border-radius:8px;border:2px solid #eee;">
           <?php else: ?>
             <div style="width:90px;height:105px;border-radius:8px;background:#1a3a5c;display:flex;
@@ -208,7 +208,7 @@
                 </div>
               </div>
               <div class="d-flex flex-column gap-1">
-                <a href="<?= base_url('writable/' . $doc['file_path']) ?>" target="_blank"
+                <a href="<?= base_url($doc['file_path']) ?>" target="_blank"
                   class="btn btn-xs btn-outline-secondary" style="font-size:10px;padding:2px 8px;">View</a>
                 <?php if (!$doc['verified']): ?>
                   <form method="post" action="<?= base_url('coaches/verify-doc/' . $doc['id']) ?>">

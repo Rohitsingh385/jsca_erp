@@ -113,11 +113,18 @@ class Officials extends BaseController
 
         // Photo upload
         $photoPath = null;
-        $photo = $this->request->getFile('profile_photo');
-        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            $photoName = $photo->getRandomName();
-            $photo->move(WRITEPATH . 'uploads/officials', $photoName);
-            $photoPath = 'uploads/officials/' . $photoName;
+        try {
+            $photoPath = $this->uploadFile('profile_photo', 'officials', ['jpg','jpeg','png'], 5);
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
+
+        // Check for duplicate email before inserting user
+        if (!empty($post['email'])) {
+            $exists = $this->db->table('users')->where('email', $post['email'])->countAllResults();
+            if ($exists) {
+                return redirect()->back()->with('error', 'A user with this email already exists.')->withInput();
+            }
         }
 
         // Create user account
@@ -281,11 +288,11 @@ class Officials extends BaseController
             'updated_at'       => date('Y-m-d H:i:s'),
         ];
 
-        $photo = $this->request->getFile('profile_photo');
-        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            $photoName = $photo->getRandomName();
-            $photo->move(WRITEPATH . 'uploads/officials', $photoName);
-            $data['profile_photo'] = 'uploads/officials/' . $photoName;
+        try {
+            $newPhoto = $this->uploadFile('profile_photo', 'officials', ['jpg','jpeg','png'], 5);
+            if ($newPhoto) $data['profile_photo'] = $newPhoto;
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
 
         $this->db->table('officials')->where('id', $id)->update($data);

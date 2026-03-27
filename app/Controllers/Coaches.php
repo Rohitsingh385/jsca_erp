@@ -92,11 +92,10 @@ class Coaches extends BaseController
         $post = $this->request->getPost();
 
         $photoPath = null;
-        $photo     = $this->request->getFile('photo');
-        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            $name = $photo->getRandomName();
-            $photo->move(WRITEPATH . 'uploads/coaches', $name);
-            $photoPath = 'uploads/coaches/' . $name;
+        try {
+            $photoPath = $this->uploadFile('photo', 'coaches', ['jpg','jpeg','png'], 5);
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
 
         $data = [
@@ -226,11 +225,11 @@ class Coaches extends BaseController
             'updated_at'       => date('Y-m-d H:i:s'),
         ];
 
-        $photo = $this->request->getFile('photo');
-        if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            $name = $photo->getRandomName();
-            $photo->move(WRITEPATH . 'uploads/coaches', $name);
-            $data['photo_path'] = 'uploads/coaches/' . $name;
+        try {
+            $newPhoto = $this->uploadFile('photo', 'coaches', ['jpg','jpeg','png'], 5);
+            if ($newPhoto) $data['photo_path'] = $newPhoto;
+        } catch (\RuntimeException $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
 
         $this->db->table('coaches')->where('id', $id)->update($data);
@@ -267,35 +266,32 @@ class Coaches extends BaseController
 
         $file = $this->request->getFile('document');
         if (!$file || !$file->isValid()) {
-            return redirect()->back()->with('error', 'Invalid file.');
+            return redirect()->back()->with('error', 'Please select a file to upload.');
         }
-        if (!in_array(strtolower($file->getExtension()), ['jpg','jpeg','png','pdf'])) {
+        if (!in_array(strtolower($file->getClientExtension()), ['jpg','jpeg','png','pdf'])) {
             return redirect()->back()->with('error', 'Only JPG, PNG or PDF allowed.');
+        }
+        if ($file->getSizeByUnit('mb') > 10) {
+            return redirect()->back()->with('error', 'File too large. Maximum 10MB.');
         }
 
         $docType  = $this->request->getPost('doc_type');
-        $fileName = $file->getRandomName();
-        $file->move(WRITEPATH . 'uploads/coach_docs/' . $id, $fileName);
+        $dir      = FCPATH . 'assets/uploads/coach_docs/' . $id;
+        if (!is_dir($dir)) mkdir($dir, 0775, true);
+        $ext      = strtolower($file->getClientExtension());
+        $fileName = time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $file->move($dir, $fileName);
 
         $this->db->table('coach_documents')->insert([
             'coach_id'    => $id,
             'doc_type'    => $docType,
             'label'       => $this->request->getPost('label'),
-            'file_path'   => 'uploads/coach_docs/' . $id . '/' . $fileName,
+            'file_path'   => 'assets/uploads/coach_docs/' . $id . '/' . $fileName,
             'file_name'   => $file->getClientName(),
-            'mime_type'   => $file->getMimeType(),
+            'mime_type'   => $file->getClientMimeType(),
             'uploaded_by' => session('user_id'),
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
-
-        if (in_array($docType, ['aadhaar_front','aadhaar_back'])) {
-            $sides = $this->db->table('coach_documents')
-                ->whereIn('doc_type', ['aadhaar_front','aadhaar_back'])
-                ->where('coach_id', $id)->countAllResults();
-            if ($sides >= 2) {
-                $this->db->table('coaches')->where('id', $id)->update(['aadhaar_verified' => 1]);
-            }
-        }
 
         $this->audit('DOC_UPLOADED', 'coaches', $id, null, ['doc_type' => $docType]);
         return redirect()->to('coaches/view/' . $id)->with('success', 'Document uploaded.');
@@ -313,6 +309,17 @@ class Coaches extends BaseController
             'verified_by' => session('user_id'),
             'verified_at' => date('Y-m-d H:i:s'),
         ]);
+
+        if (in_array($doc['doc_type'], ['aadhaar_front', 'aadhaar_back'])) {
+            $bothVerified = $this->db->table('coach_documents')
+                ->whereIn('doc_type', ['aadhaar_front', 'aadhaar_back'])
+                ->where('coach_id', $doc['coach_id'])
+                ->where('verified', 1)
+                ->countAllResults();
+            if ($bothVerified >= 2) {
+                $this->db->table('coaches')->where('id', $doc['coach_id'])->update(['aadhaar_verified' => 1]);
+            }
+        }
         $this->audit('DOC_VERIFIED', 'coaches', $doc['coach_id'], null, ['doc_id' => $docId]);
         return redirect()->to('coaches/view/' . $doc['coach_id'])->with('success', 'Document verified.');
     }
@@ -324,7 +331,7 @@ class Coaches extends BaseController
         $doc = $this->db->table('coach_documents')->where('id', $docId)->get()->getRowArray();
         if (!$doc) return redirect()->back()->with('error', 'Document not found.');
 
-        $fullPath = WRITEPATH . $doc['file_path'];
+        $fullPath = FCPATH . $doc['file_path'];
         if (file_exists($fullPath)) unlink($fullPath);
 
         $this->db->table('coach_documents')->where('id', $docId)->delete();

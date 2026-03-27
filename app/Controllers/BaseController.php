@@ -162,6 +162,35 @@ abstract class BaseController extends Controller
         ]);
     }
 
+    // ── File upload helper ────────────────────────────────────
+    /**
+     * Moves an uploaded file to public/assets/uploads/{folder}/
+     * Returns the web-accessible path or null if no file.
+     */
+    protected function uploadFile(string $inputName, string $folder, array $allowed = ['jpg','jpeg','png','pdf'], int $maxSizeMB = 10): ?string
+    {
+        $file = $this->request->getFile($inputName);
+        if (!$file || !$file->isValid() || $file->hasMoved()) return null;
+
+        if ($file->getSize() > $maxSizeMB * 1024 * 1024) {
+            throw new \RuntimeException('File too large. Maximum size is ' . $maxSizeMB . 'MB.');
+        }
+
+        $ext = strtolower($file->getClientExtension());
+        if (!in_array($ext, $allowed)) {
+            throw new \RuntimeException('Invalid file type. Allowed: ' . implode(', ', $allowed));
+        }
+
+        $dir = FCPATH . 'assets/uploads/' . $folder;
+        if (!is_dir($dir)) mkdir($dir, 0775, true);
+
+        // Build name manually — avoids getRandomName() calling getExtension() -> getMimeType() -> finfo_file()
+        $name = time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $file->move($dir, $name);
+
+        return 'assets/uploads/' . $folder . '/' . $name;
+    }
+
     // ── Generate unique IDs ──────────────────────────────────
     protected function generatePlayerId(): string
     {

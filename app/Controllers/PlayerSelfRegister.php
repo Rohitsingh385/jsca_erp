@@ -147,9 +147,12 @@ class PlayerSelfRegister extends BaseController
         $photoPath = null;
         $photo = $this->request->getFile('photo');
         if ($photo && $photo->isValid() && !$photo->hasMoved()) {
-            $name = $photo->getRandomName();
-            $photo->move(WRITEPATH . 'uploads/players', $name);
-            $photoPath = 'uploads/players/' . $name;
+            $ext      = strtolower($photo->getClientExtension());
+            $dir      = FCPATH . 'assets/uploads/players';
+            if (!is_dir($dir)) mkdir($dir, 0775, true);
+            $name     = time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+            $photo->move($dir, $name);
+            $photoPath = 'assets/uploads/players/' . $name;
         }
 
         // Generate JSCA Player ID
@@ -159,6 +162,12 @@ class PlayerSelfRegister extends BaseController
 
         // Generate a random password
         $plainPassword = $this->generatePassword();
+
+        // Check duplicate email in users table before inserting
+        $emailExists = $this->db->table('users')->where('email', $email)->countAllResults();
+        if ($emailExists) {
+            return redirect()->back()->with('error', 'This email is already registered. Please login.')->withInput();
+        }
 
         // Create user account (inactive until admin verifies)
         $this->db->table('users')->insert([
