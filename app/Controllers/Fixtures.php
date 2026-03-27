@@ -110,6 +110,10 @@ class Fixtures extends BaseController
             return redirect()->back()->with('error', 'Team A and Team B cannot be the same.')->withInput();
         }
 
+        if (!empty($post['umpire1_id']) && !empty($post['umpire2_id']) && $post['umpire1_id'] === $post['umpire2_id']) {
+            return redirect()->back()->with('error', 'Umpire 1 and Umpire 2 cannot be the same person.')->withInput();
+        }
+
         // Check tournament is in valid state
         $tournament = $this->db->table('tournaments')->where('id', $post['tournament_id'])->get()->getRowArray();
         if (!$tournament || !in_array($tournament['status'], ['Fixture Ready', 'Ongoing'])) {
@@ -243,6 +247,10 @@ class Fixtures extends BaseController
 
         if ($post['team_a_id'] === $post['team_b_id']) {
             return redirect()->back()->with('error', 'Team A and Team B cannot be the same.')->withInput();
+        }
+
+        if (!empty($post['umpire1_id']) && !empty($post['umpire2_id']) && $post['umpire1_id'] === $post['umpire2_id']) {
+            return redirect()->back()->with('error', 'Umpire 1 and Umpire 2 cannot be the same person.')->withInput();
         }
 
         $data = [
