@@ -147,20 +147,11 @@
         <div class="card-header">Guardian Details <span class="text-muted fw-normal" style="font-size:12px;">(required for U19 and below)</span></div>
         <div class="card-body">
           <div class="row g-3">
-            <div class="col-md-4">
-              <label class="form-label" style="font-size:12px;font-weight:600;">Relation</label>
-              <select name="guardian_relation" class="form-select form-select-sm">
-                <option value="">Select…</option>
-                <option value="Father" <?= old('guardian_relation') === 'Father' ? 'selected' : '' ?>>Father</option>
-                <option value="Mother" <?= old('guardian_relation') === 'Mother' ? 'selected' : '' ?>>Mother</option>
-                <option value="Guardian" <?= old('guardian_relation') === 'Guardian' ? 'selected' : '' ?>>Guardian</option>
-              </select>
-            </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label" style="font-size:12px;font-weight:600;">Guardian Name</label>
               <input type="text" name="guardian_name" class="form-control form-control-sm" value="<?= old('guardian_name') ?>">
             </div>
-            <div class="col-md-4">
+            <div class="col-md-6">
               <label class="form-label" style="font-size:12px;font-weight:600;">Guardian Phone</label>
               <input type="tel" name="guardian_phone" class="form-control form-control-sm"
                 value="<?= old('guardian_phone') ?>" pattern="[6-9][0-9]{9}" maxlength="10" inputmode="numeric">

@@ -435,4 +435,71 @@ class Finance extends BaseController
         $this->db->table('ledger_heads')->delete(['id' => $id]);
         return redirect()->back()->with('success', 'Deleted');
     }
+
+    // ── GET /finance/voucher/receipt voucher create ───────────────────────────
+    public function rcpt_create()
+    {
+
+        $this->requirePermission('finance.view');
+
+        return $this->render('finance/voucher_form_rcpt', [
+            'pageTitle'   => 'Create Voucher — JSCA ERP',
+            'voucher'     => $this->generateVoucherNumber(),
+            'officials'   => $this->db->table('officials')->where('status', 1)->orderBy('full_name')->get()->getResultArray(),
+            'official_types'   => $this->db->table('official_types')->where('is_active', 1)->orderBy('name')->get()->getResultArray(),
+            'tournaments' => $this->db->table('tournaments')->orderBy('name')->get()->getResultArray(),
+            'fixtures'    => $this->db->table('fixtures f')
+                ->select('f.tournament_id, f.match_number, f.match_date, ta.name as team_a, tb.name as team_b,f.team_a_id,f.team_b_id')
+                ->join('teams ta', 'ta.id = f.team_a_id')
+                ->join('teams tb', 'tb.id = f.team_b_id')
+                ->where('f.status', 'Completed')
+                ->orderBy('f.match_date', 'DESC')
+                ->limit(100)
+                ->get()->getResultArray(),
+            'ledger_heads' => $this->db->table('ledger_heads')->select('id,group_id,name,opening_balance,balance_type')->get()->getresultArray(),
+            'bank_acc' => $this->db->table('bank_acc_master')->select('*')->get()->getresultArray()
+        ]);
+    }
+
+    public function getMatchesByTournament()
+    {
+        $tournamentId = $this->request->getPost('tournament_id');
+
+        if (empty($tournamentId)) {
+            return $this->response->setJSON([]);
+        }
+
+        $matches = $this->db->table('fixtures f')
+            ->select('f.id, ta.name as team_a, tb.name as team_b, f.team_a_id, f.team_b_id')
+            ->join('teams ta', 'ta.id = f.team_a_id')
+            ->join('teams tb', 'tb.id = f.team_b_id')
+            ->where('f.tournament_id', $tournamentId)
+            ->where('f.status', 'Completed')
+            ->get()->getResultArray();
+
+        return $this->response->setJSON($matches);
+    }
+
+    public function getOfficialsByType()
+    {
+        $typeId = $this->request->getPost('type_id');
+        $matchId = $this->request->getPost('match_id');
+
+        if (empty($typeId)) {
+            return $this->response->setJSON([]);
+        }
+
+        // Adjust table name and column names to match your database
+        $officials = $this->db->table('match_officials')
+            ->select('id, name')
+            ->where('official_type_id', $typeId)
+            ->where('status', 'Active')
+            ->where('match_id', $matchId)
+            ->where('official_type_id', $typeId)
+            ->where('PAmt', 0.00)
+            ->orderBy('name', 'ASC')
+            ->get()->getResultArray();
+
+        return $this->response->setJSON($officials);
+    }
 }

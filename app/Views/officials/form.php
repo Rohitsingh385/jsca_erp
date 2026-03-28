@@ -77,10 +77,10 @@ $old      = fn(string $k, $default = '') => old($k, $isEdit ? ($official[$k] ?? 
               <textarea name="address" class="form-control" rows="2"><?= esc($old('address')) ?></textarea>
             </div>
             <div class="col-md-4">
-              <label class="form-label">Grade</label>
+              <label class="form-label">Grade / Level</label>
               <select name="grade" class="form-select">
                 <option value="">— None —</option>
-                <?php foreach (['A','B','C','D','Panel'] as $g): ?>
+                <?php foreach (['Ranji','BCCI','Elite Panel','Grade I','Grade II','State Panel'] as $g): ?>
                   <option value="<?= $g ?>" <?= $old('grade') === $g ? 'selected' : '' ?>><?= $g ?></option>
                 <?php endforeach; ?>
               </select>

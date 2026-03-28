@@ -144,6 +144,46 @@ class Fixtures extends BaseController
             'created_at'    => date('Y-m-d H:i:s'),
         ];
 
+        $match_officials = [
+            // Umpire 1
+            [
+                'match_number'     => $post['match_number'] ?: $matchNumber,
+                'official_type_id' => 1,
+                'official_id'      => $post['umpire1_id'],
+                'name'             => $this->db->query("SELECT full_name FROM officials WHERE id = " . (int)$post['umpire1_id'])->getRowArray()['full_name'] ?? 'Umpire 1',
+                'status'           => 'Active',
+            ],
+            // Umpire 2
+            [
+                'match_number'     => $post['match_number'] ?: $matchNumber,
+                'official_type_id' => 1,
+                'official_id'      => $post['umpire2_id'],
+                'name'             => $this->db->query("SELECT full_name FROM officials WHERE id = " . (int)$post['umpire2_id'])->getRowArray()['full_name'] ?? 'Umpire 2',
+                'status'           => 'Active',
+            ],
+            // Scorer
+            [
+                'match_number'     => $post['match_number'] ?: $matchNumber,
+                'official_type_id' => 2,
+                'official_id'      => $post['scorer_id'],
+                'name'             => $this->db->query("SELECT full_name FROM officials WHERE id = " . (int)$post['scorer_id'])->getRowArray()['full_name'] ?? 'Scorer',
+                'status'           => 'Active',
+            ],
+            // Referee
+            [
+                'match_number'     => $post['match_number'] ?: $matchNumber,
+                'official_type_id' => 3,
+                'official_id'      => $post['referee_id'],
+                'name'             => $this->db->query("SELECT full_name FROM officials WHERE id = " . (int)$post['scorer_id'])->getRowArray()['full_name'] ?? 'Referee',
+                'status'           => 'Active',
+            ],
+        ];
+
+        $this->db->insert_batch('match_officials', $match_officials);
+
+        // If using CodeIgniter 4, you can insert all at once:
+        // $this->db->table('your_table_name')->insertBatch($match_officials);
+
         $this->db->table('fixtures')->insert($data);
         $id = $this->db->insertID();
         $this->audit('CREATE', 'fixtures', $id, null, $data);
@@ -216,7 +256,7 @@ class Fixtures extends BaseController
             'umpires'     => $umpires,
             'scorers'     => $scorers,
             'referees'    => $referees,
-            'tournamentId'=> $fixture['tournament_id'],
+            'tournamentId' => $fixture['tournament_id'],
         ]);
     }
 
@@ -323,7 +363,7 @@ class Fixtures extends BaseController
             ->join('officials sc',   'sc.id = f.scorer_id',      'left')
             ->join('officials rf',   'rf.id = f.referee_id',     'left')
             ->join('teams tw',       'tw.id = f.toss_winner_id', 'left')
-            ->join('teams bf',       'bf.id = f.batting_first_id','left')
+            ->join('teams bf',       'bf.id = f.batting_first_id', 'left')
             ->where('f.id', $id)
             ->get()->getRowArray();
 

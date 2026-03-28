@@ -131,7 +131,7 @@ VALUES
 | District           | `district_id`      | ✅ | Use district ID from reference table |
 | Phone              | `phone`            | — | |
 | Email              | `email`            | — | |
-| Grade              | `grade`            | — | `A` / `B` / `C` / `D` / `Panel` |
+| Grade              | `grade`            | — | See grade values by type below |
 | Experience (years) | `experience_years` | — | Number |
 | Fee Per Match      | `fee_per_match`    | — | Decimal e.g. `500.00` |
 | Bank Name          | `bank_name`        | — | For payment processing |
@@ -139,30 +139,97 @@ VALUES
 | Bank IFSC          | `bank_ifsc`        | — | 11 chars |
 | Address            | `address`          | — | |
 
-### Official Type IDs
-| ID | Type |
-|----|------|
-| 1  | Umpire |
-| 2  | Scorer |
-| 3  | Referee |
-| 4  | Match Referee |
+### Tournament Excel column mapping
+| Excel Column | DB Column | Notes |
+|-------------|-----------|-------|
+| Name | `name` | Tournament full name |
+| Format | `format` | `T10` / `T20` / `ODI-40` / `ODI-50` / `Test` / `Custom` |
+| Gender | `gender` | `Male` / `Female` / `Mixed` |
+| Category | `age_category` | See mapping below |
+| Level | `type` | `District` / `State` / `National` / `Invitational` |
+
+### Category mapping (JSCA Excel → DB)
+| JSCA Excel value | DB `age_category` |
+|-----------------|-------------------|
+| OPEN / Open | `Open` |
+| U-23 / U23 | `U23` |
+| U-19 / U19 | `U19` |
+| U-16 / U16 | `U16` |
+| U-15 / U15 | `U15` |
+| U-14 / U14 | `U14` |
+| Women / Women's | `Women` |
+| Senior | `Senior` |
+
+### Level mapping (JSCA Excel → DB `type` column)
+| JSCA Excel value | DB `type` value |
+|-----------------|------------------|
+| Club | `Club` |
+| District | `District` |
+| State | `State` |
+| National | `National` |
+| Invitational | `Invitational` |
+
+### Grade values by official type
+
+JSCA uses different column names in their Excel depending on official type — both map to the `grade` column in our DB:
+
+**Umpires** — JSCA calls this column `level`:
+| JSCA Excel value | DB `grade` value |
+|-----------------|------------------|
+| Elite / BCCI Elite | `Elite Panel` |
+| BCCI Level-1 / BCCI Level 1 | `BCCI` |
+| Ranji / Ranji Panel | `Ranji` |
+| Grade-I / Grade I | `Grade I` |
+| Grade-II / Grade II | `Grade II` |
+| State Panel | `State Panel` |
+
+**Scorers & Referees** — JSCA calls this column `grade`:
+| JSCA Excel value | DB `grade` value |
+|-----------------|------------------|
+| BCCI Panel / BCCI PANEL | `BCCI` |
+| State Panel / STATE PANEL | `State Panel` |
 
 ### JSCA Official ID format
-`JSCA-O-YYYY-NNNN` — e.g. `JSCA-O-2026-0005`
+The ID is **type-specific** — each official type has its own prefix and its own counter:
+
+| Type | Format | Example |
+|------|--------|---------|
+| Umpire | `JSCA-UMP-NNNN` | `JSCA-UMP-0001` |
+| Scorer | `JSCA-SCR-NNNN` | `JSCA-SCR-0001` |
+| Referee | `JSCA-REF-NNNN` | `JSCA-REF-0001` |
+| Match Referee | `JSCA-MRF-NNNN` | `JSCA-MRF-0001` |
+
+The counter resets per type — so `JSCA-UMP-0001` and `JSCA-SCR-0001` can both exist.
+
+Check the last used ID per type before importing:
 ```sql
-SELECT MAX(jsca_official_id) FROM officials;
+SELECT ot.name, ot.prefix, MAX(o.jsca_official_id) as last_id
+FROM officials o
+JOIN official_types ot ON ot.id = o.official_type_id
+GROUP BY ot.id;
 ```
 
 ### SQL template
 ```sql
+-- Umpire example
 INSERT INTO officials
   (jsca_official_id, official_type_id, full_name, dob, gender,
    district_id, phone, email, grade, experience_years,
    fee_per_match, bank_name, bank_account, bank_ifsc, address, status, registered_by, created_at)
 VALUES
-  ('JSCA-O-2026-0005', 1, 'Full Name Here', '1980-07-10', 'Male',
+  ('JSCA-UMP-0001', 1, 'Umpire Name', '1980-07-10', 'Male',
    1, '9800000003', NULL, 'B', 8,
    500.00, NULL, NULL, NULL, NULL, 'Active', 1, NOW());
+
+-- Scorer example
+INSERT INTO officials
+  (jsca_official_id, official_type_id, full_name, dob, gender,
+   district_id, phone, email, grade, experience_years,
+   fee_per_match, bank_name, bank_account, bank_ifsc, address, status, registered_by, created_at)
+VALUES
+  ('JSCA-SCR-0001', 2, 'Scorer Name', '1985-03-15', 'Male',
+   1, '9800000004', NULL, 'State Panel', 5,
+   300.00, NULL, NULL, NULL, NULL, 'Active', 1, NOW());
 ```
 
 ---
@@ -277,3 +344,177 @@ SELECT COUNT(*) FROM players WHERE created_at >= CURDATE();
 | Date format `DD/MM/YYYY` from Excel | Invalid date, insert fails | Convert to `YYYY-MM-DD` first |
 | Duplicate `jsca_*_id` | Unique key violation, whole batch fails | Check `MAX(jsca_player_id)` before starting |
 | Missing `district_id` | Foreign key error | Always map district name → ID using table above |
+
+---
+
+## Foreign Key Map — Table Relationships
+
+Understanding this prevents FK errors when inserting or deleting data.
+
+```
+districts
+    ├── players.district_id
+    ├── coaches.district_id
+    ├── officials.district_id
+    ├── venues.district_id
+    ├── teams.district_id
+    └── user_districts.district_id
+
+players
+    ├── player_career_stats.player_id   ← always insert this after every player
+    ├── player_documents.player_id
+    ├── team_players.player_id
+    ├── teams.captain_id
+    ├── teams.vice_captain_id
+    ├── batting_stats.player_id
+    └── bowling_stats.player_id
+
+coaches
+    ├── coach_documents.coach_id
+    └── team_coaches.coach_id
+
+officials
+    ├── official_certifications.official_id
+    ├── fixtures.umpire1_id
+    ├── fixtures.umpire2_id
+    ├── fixtures.scorer_id
+    ├── fixtures.referee_id
+    └── payment_vouchers.official_id
+
+venues
+    └── fixtures.venue_id
+
+tournaments
+    ├── teams.tournament_id
+    ├── fixtures.tournament_id
+    ├── tournament_documents.tournament_id
+    ├── tournament_budgets.tournament_id
+    └── payment_vouchers.tournament_id
+
+teams
+    ├── team_players.team_id
+    ├── team_coaches.team_id
+    ├── team_documents.team_id
+    ├── fixtures.team_a_id
+    ├── fixtures.team_b_id
+    ├── batting_stats.team_id
+    ├── bowling_stats.team_id
+    └── live_matches.team_a_id / team_b_id
+
+fixtures
+    ├── batting_stats.fixture_id
+    ├── bowling_stats.fixture_id
+    ├── match_scorecards.fixture_id
+    └── payment_vouchers.fixture_id
+
+roles
+    ├── users.role_id
+    └── official_types.role_id
+
+users
+    ├── players.registered_by
+    ├── officials.registered_by
+    ├── officials.user_id
+    ├── tournaments.created_by
+    ├── payment_vouchers.created_by
+    ├── payment_vouchers.approved_by
+    └── user_districts.user_id
+```
+
+---
+
+## Safe Deletion Order
+
+**Golden rule: always delete children before parents.**
+
+### Clear everything except players
+```sql
+SET FOREIGN_KEY_CHECKS = 0;
+TRUNCATE TABLE batting_stats;
+TRUNCATE TABLE bowling_stats;
+TRUNCATE TABLE match_scorecards;
+TRUNCATE TABLE payment_vouchers;
+TRUNCATE TABLE fixtures;
+TRUNCATE TABLE live_matches;
+TRUNCATE TABLE team_players;
+TRUNCATE TABLE team_coaches;
+TRUNCATE TABLE team_documents;
+TRUNCATE TABLE teams;
+TRUNCATE TABLE tournament_documents;
+TRUNCATE TABLE tournament_budgets;
+TRUNCATE TABLE tournaments;
+TRUNCATE TABLE official_certifications;
+TRUNCATE TABLE officials;
+TRUNCATE TABLE coach_documents;
+TRUNCATE TABLE coaches;
+TRUNCATE TABLE venues;
+SET FOREIGN_KEY_CHECKS = 1;
+```
+
+### Delete a single tournament safely
+```sql
+SET FOREIGN_KEY_CHECKS = 0;
+DELETE bs FROM batting_stats bs JOIN fixtures f ON f.id=bs.fixture_id WHERE f.tournament_id=?;
+DELETE bs FROM bowling_stats bs JOIN fixtures f ON f.id=bs.fixture_id WHERE f.tournament_id=?;
+DELETE FROM fixtures WHERE tournament_id=?;
+UPDATE teams SET captain_id=NULL, vice_captain_id=NULL WHERE tournament_id=?;
+DELETE FROM team_players WHERE team_id IN (SELECT id FROM teams WHERE tournament_id=?);
+DELETE FROM team_coaches WHERE team_id IN (SELECT id FROM teams WHERE tournament_id=?);
+DELETE FROM team_documents WHERE team_id IN (SELECT id FROM teams WHERE tournament_id=?);
+DELETE FROM teams WHERE tournament_id=?;
+DELETE FROM tournament_documents WHERE tournament_id=?;
+DELETE FROM tournaments WHERE id=?;
+SET FOREIGN_KEY_CHECKS = 1;
+```
+
+### Delete a single player safely
+```sql
+-- Check for match stats first — if any exist, do NOT delete (historical record)
+SELECT COUNT(*) FROM batting_stats WHERE player_id=?;
+SELECT COUNT(*) FROM bowling_stats WHERE player_id=?;
+
+-- Only proceed if both return 0:
+DELETE FROM team_players WHERE player_id=?;
+DELETE FROM player_documents WHERE player_id=?;
+DELETE FROM player_career_stats WHERE player_id=?;
+UPDATE teams SET captain_id=NULL WHERE captain_id=?;
+UPDATE teams SET vice_captain_id=NULL WHERE vice_captain_id=?;
+DELETE FROM players WHERE id=?;
+```
+
+### Delete a single official safely
+```sql
+UPDATE fixtures SET umpire1_id=NULL WHERE umpire1_id=?;
+UPDATE fixtures SET umpire2_id=NULL WHERE umpire2_id=?;
+UPDATE fixtures SET scorer_id=NULL WHERE scorer_id=?;
+UPDATE fixtures SET referee_id=NULL WHERE referee_id=?;
+DELETE FROM official_certifications WHERE official_id=?;
+DELETE FROM officials WHERE id=?;
+```
+
+### Delete a single venue safely
+```sql
+UPDATE fixtures SET venue_id=NULL WHERE venue_id=?;
+DELETE FROM venues WHERE id=?;
+```
+
+---
+
+## TRUNCATE vs DELETE
+
+| | TRUNCATE | DELETE |
+|---|---|---|
+| Resets auto-increment ID | ✅ Yes | ❌ No |
+| Can use WHERE clause | ❌ No | ✅ Yes |
+| Faster on large tables | ✅ Yes | ❌ No |
+| Respects FK checks | ❌ No (need to disable) | ✅ Yes |
+
+Use `TRUNCATE` when clearing entire tables for a fresh start.
+Use `DELETE WHERE` when removing specific records.
+
+Always wrap TRUNCATE operations with:
+```sql
+SET FOREIGN_KEY_CHECKS = 0;
+-- your truncates here
+SET FOREIGN_KEY_CHECKS = 1;
+```

@@ -55,7 +55,7 @@ class Tournaments extends BaseController
         $rules = [
             'name'                  => 'required|min_length[3]|max_length[200]',
             'season'                => 'required|max_length[10]',
-            'age_category'          => 'required|in_list[U14,U16,U19,Senior,Masters,Women]',
+            'age_category'          => 'required|in_list[U14,U15,U16,U19,U23,Senior,Open,Masters,Women]',
             'gender'                => 'required|in_list[Male,Female,Mixed]',
             'format'                => 'required|in_list[T10,T20,ODI-40,ODI-50,Test,Custom]',
             'structure'             => 'required|in_list[Round Robin,Knockout,Group+Knockout,League+Playoffs,Zonal]',
@@ -215,7 +215,7 @@ class Tournaments extends BaseController
         $rules = [
             'name'                  => 'required|min_length[3]|max_length[200]',
             'season'                => 'required|max_length[10]',
-            'age_category'          => 'required|in_list[U14,U16,U19,Senior,Masters,Women]',
+            'age_category'          => 'required|in_list[U14,U15,U16,U19,U23,Senior,Open,Masters,Women]',
             'gender'                => 'required|in_list[Male,Female,Mixed]',
             'format'                => 'required|in_list[T10,T20,ODI-40,ODI-50,Test,Custom]',
             'structure'             => 'required|in_list[Round Robin,Knockout,Group+Knockout,League+Playoffs,Zonal]',

@@ -194,7 +194,9 @@ class Teams extends BaseController
             ->orderBy('created_at', 'DESC')
             ->get()->getResultArray();
 
-        // Available players: match age_category + same district + not in ANY team in this tournament
+        // Available players: eligibility filters
+        $tournament = $this->db->table('tournaments')->where('id', $team['tournament_id'])->get()->getRowArray();
+
         $takenPlayerIds = $this->db->table('team_players tp')
             ->select('tp.player_id')
             ->join('teams t', 't.id = tp.team_id')
@@ -203,14 +205,25 @@ class Teams extends BaseController
         $takenIds = array_column($takenPlayerIds, 'player_id') ?: [0];
 
         $availableQuery = $this->db->table('players p')
-            ->select('p.id, p.full_name, p.jsca_player_id, p.role, p.age_category')
+            ->select('p.id, p.full_name, p.jsca_player_id, p.role, p.age_category, p.gender')
             ->where('p.status', 'Active')
-            ->where('p.district_id', $team['district_id'])
             ->whereNotIn('p.id', $takenIds)
             ->orderBy('p.full_name');
 
-        if (!empty($team['age_category'])) {
-            $availableQuery->where('p.age_category', $team['age_category']);
+        // District filter: District/Club tournaments = same district only, State/National = any district
+        $tournamentType = $tournament['type'] ?? 'District';
+        if (in_array($tournamentType, ['District', 'Club'])) {
+            $availableQuery->where('p.district_id', $team['district_id']);
+        }
+
+        // Age category filter
+        if (!empty($tournament['age_category']) && $tournament['age_category'] !== 'Open') {
+            $availableQuery->where('p.age_category', $tournament['age_category']);
+        }
+
+        // Gender filter
+        if (!empty($tournament['gender']) && $tournament['gender'] !== 'Mixed') {
+            $availableQuery->where('p.gender', $tournament['gender']);
         }
 
         $availablePlayers = $availableQuery->get()->getResultArray();
@@ -307,11 +320,33 @@ class Teams extends BaseController
             return redirect()->back()->with('error', 'Access denied.');
         }
 
+        // Get tournament for eligibility checks
+        $tournament = $this->db->table('tournaments')->where('id', $team['tournament_id'])->get()->getRowArray();
+
         $playerId  = (int)$this->request->getPost('player_id');
         $jerseyNo  = $this->request->getPost('jersey_number') ?: null;
         $isCaptain = $this->request->getPost('is_captain') ? 1 : 0;
         $isVc      = $this->request->getPost('is_vice_captain') ? 1 : 0;
         $isWk      = $this->request->getPost('is_wk') ? 1 : 0;
+
+        $player = $this->db->table('players')->where('id', $playerId)->get()->getRowArray();
+        if (!$player) return redirect()->back()->with('error', 'Player not found.');
+
+        // Gender check — Female tournament only allows Female players, Male only Male
+        if ($tournament && $tournament['gender'] !== 'Mixed') {
+            if ($player['gender'] !== $tournament['gender']) {
+                return redirect()->back()->with('error',
+                    'This is a ' . $tournament['gender'] . ' tournament. Player gender (' . $player['gender'] . ') does not match.');
+            }
+        }
+
+        // Age category check
+        if ($tournament && !empty($tournament['age_category']) && $tournament['age_category'] !== 'Open') {
+            if ($player['age_category'] !== $tournament['age_category']) {
+                return redirect()->back()->with('error',
+                    'Player age category (' . $player['age_category'] . ') does not match tournament category (' . $tournament['age_category'] . ').');
+            }
+        }
 
         $exists = $this->db->table('team_players')
             ->where('team_id', $id)->where('player_id', $playerId)
@@ -438,20 +473,23 @@ class Teams extends BaseController
 
         $file = $this->request->getFile('document');
         if (!$file || !$file->isValid()) return redirect()->back()->with('error', 'Invalid file.');
-        if (!in_array(strtolower($file->getExtension()), ['jpg', 'jpeg', 'png', 'pdf'])) {
+        if (!in_array(strtolower($file->getClientExtension()), ['jpg', 'jpeg', 'png', 'pdf'])) {
             return redirect()->back()->with('error', 'Only JPG, PNG or PDF allowed.');
         }
 
-        $fileName = $file->getRandomName();
-        $file->move(WRITEPATH . 'uploads/team_docs/' . $id, $fileName);
+        $ext      = strtolower($file->getClientExtension());
+        $dir      = FCPATH . 'assets/uploads/team_docs/' . $id;
+        if (!is_dir($dir)) mkdir($dir, 0775, true);
+        $fileName = time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
+        $file->move($dir, $fileName);
 
         $this->db->table('team_documents')->insert([
             'team_id'     => $id,
             'doc_type'    => $this->request->getPost('doc_type'),
             'label'       => $this->request->getPost('label'),
-            'file_path'   => 'uploads/team_docs/' . $id . '/' . $fileName,
+            'file_path'   => 'assets/uploads/team_docs/' . $id . '/' . $fileName,
             'file_name'   => $file->getClientName(),
-            'mime_type'   => $file->getMimeType(),
+            'mime_type'   => $file->getClientMimeType(),
             'uploaded_by' => session('user_id'),
             'created_at'  => date('Y-m-d H:i:s'),
         ]);
@@ -483,7 +521,7 @@ class Teams extends BaseController
         $doc = $this->db->table('team_documents')->where('id', $docId)->get()->getRowArray();
         if (!$doc) return redirect()->back()->with('error', 'Document not found.');;
 
-        $fullPath = WRITEPATH . $doc['file_path'];
+        $fullPath = FCPATH . $doc['file_path'];
         if (file_exists($fullPath)) unlink($fullPath);
 
         $this->db->table('team_documents')->where('id', $docId)->delete();

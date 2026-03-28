@@ -157,6 +157,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->get('auto-generate/(:num)',    'Finance::autoGenerate/$1');
         $routes->get('reports',                 'Finance::reports');
         $routes->get('export',                  'Finance::export');
+        $routes->get('voucher/rcpt_create',     'Finance::rcpt_create');
+        $routes->post('voucher/getMatchesByTournament',     'Finance::getMatchesByTournament');
+        $routes->post('voucher/getOfficialsByType', 'Finance::getOfficialsByType');
 
         // Group Master
         $routes->get('accgroups', 'Finance::accgroups');

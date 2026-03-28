@@ -50,8 +50,17 @@ $old    = fn(string $k, $default = '') => old($k, $isEdit ? ($tournament[$k] ?? 
               <label class="form-label">Age Category <span class="text-danger">*</span></label>
               <select name="age_category" class="form-select" required>
                 <option value="">— Select —</option>
-                <?php foreach (['U14','U16','U19','Senior','Masters','Women'] as $c): ?>
+                <?php foreach (['U14','U15','U16','U19','U23','Senior','Open','Masters','Women'] as $c): ?>
                   <option value="<?= $c ?>" <?= $old('age_category') === $c ? 'selected' : '' ?>><?= $c ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Level <span class="text-danger">*</span></label>
+              <select name="type" class="form-select" required>
+                <option value="">— Select —</option>
+                <?php foreach (['Club','District','State','National','Invitational'] as $l): ?>
+                  <option value="<?= $l ?>" <?= $old('type') === $l ? 'selected' : '' ?>><?= $l ?></option>
                 <?php endforeach; ?>
               </select>
             </div>

@@ -54,7 +54,7 @@ $action = $isEdit ? base_url('teams/update/' . $team['id']) : base_url('teams/st
               <option value="">— Select —</option>
               <?php foreach ($tournaments as $tr): ?>
                 <option value="<?= $tr['id'] ?>" <?= old('tournament_id') == $tr['id'] ? 'selected' : '' ?>>
-                  <?= esc($tr['name']) ?> (<?= esc($tr['age_category']) ?> · <?= esc($tr['status']) ?>)
+                  <?= esc($tr['name']) ?> (<?= esc($tr['age_category']) ?> · <?= esc($tr['type'] ?? '') ?> · <?= esc($tr['status']) ?>)
                 </option>
               <?php endforeach; ?>
             </select>

@@ -19,7 +19,7 @@
       </div>
 
       <div class="col-md-2">
-        <input type="number" step="0.01" name="opening_balance" class="form-control form-control-sm" placeholder="Opening">
+        <input type="number" step="0.01" name="opening_balance" class="form-control form-control-sm" placeholder="Opening" value='0.00'>
       </div>
 
       <div class="col-md-2">
