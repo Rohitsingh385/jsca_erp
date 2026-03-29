@@ -89,6 +89,19 @@ class Auth extends BaseController
         $redirectUrl = session()->get('redirect_url') ?? '/dashboard';
         session()->remove('redirect_url');
 
+        // Role-based redirect
+        $roleName = $user['role_name'];
+        if (in_array($roleName, ['umpire', 'scorer', 'referee', 'match_referee'])) {
+            $redirectUrl = '/official/dashboard';
+        } elseif ($roleName === 'player') {
+            $redirectUrl = '/player/dashboard';
+        } elseif (session()->get('redirect_url')) {
+            $redirectUrl = session()->get('redirect_url');
+        } else {
+            $redirectUrl = '/dashboard';
+        }
+        session()->remove('redirect_url');
+
         return redirect()->to($redirectUrl)
             ->with('success', 'Welcome back, ' . $user['full_name'] . '!');
     }

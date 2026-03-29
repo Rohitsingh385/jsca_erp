@@ -26,6 +26,12 @@ $routes->get('player-register/success',     'PlayerSelfRegister::success');
 // ─── Authenticated routes ────────────────────────────────────
 $routes->group('', ['filter' => 'auth'], function ($routes) {
 
+    // Official Dashboard
+    $routes->group('official', ['filter' => 'auth'], function ($routes) {
+        $routes->get('dashboard', 'OfficialDashboard::index');
+        $routes->get('profile',   'OfficialDashboard::profile');
+    });
+
     // Dashboard
     $routes->get('dashboard', 'Dashboard::index');
 
