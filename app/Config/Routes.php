@@ -28,8 +28,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
     // Official Dashboard
     $routes->group('official', ['filter' => 'auth'], function ($routes) {
-        $routes->get('dashboard', 'OfficialDashboard::index');
-        $routes->get('profile',   'OfficialDashboard::profile');
+        $routes->get('dashboard',              'OfficialDashboard::index');
+        $routes->get('profile',                'OfficialDashboard::profile');
+        $routes->post('request-payment/(:num)', 'OfficialDashboard::requestPayment/$1');
     });
 
     // Dashboard

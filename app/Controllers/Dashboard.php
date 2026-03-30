@@ -70,6 +70,17 @@ class Dashboard extends BaseController
                 ->groupBy('age_category')
                 ->get()->getResultArray(),
 
+            // Overdue fixtures — past date but still Scheduled
+            'overdueFixtures' => $this->db->table('fixtures f')
+                ->select('f.*, t.name as tournament_name, ta.name as team_a_name, tb.name as team_b_name')
+                ->join('tournaments t', 't.id = f.tournament_id')
+                ->join('teams ta', 'ta.id = f.team_a_id')
+                ->join('teams tb', 'tb.id = f.team_b_id')
+                ->where('f.status', 'Scheduled')
+                ->where('f.match_date <', date('Y-m-d'))
+                ->orderBy('f.match_date', 'ASC')
+                ->get()->getResultArray(),
+
             // Pending vouchers list
             'pendingVouchersList' => $this->db->table('vouchers pv')
                 ->select('pv.*, u.full_name as created_by_name')

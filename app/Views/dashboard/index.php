@@ -1,5 +1,24 @@
 <!-- app/Views/dashboard/index.php -->
 
+<?php if (!empty($overdueFixtures)): ?>
+<div class="alert alert-warning alert-dismissible fade show d-flex align-items-start gap-3 mb-4" role="alert">
+  <i class="bi bi-exclamation-triangle-fill fs-5 mt-1"></i>
+  <div class="flex-grow-1">
+    <strong><?= count($overdueFixtures) ?> fixture<?= count($overdueFixtures) > 1 ? 's are' : ' is' ?> overdue</strong> — past scheduled date but still marked as Scheduled.
+    <div class="mt-2 d-flex flex-wrap gap-2">
+      <?php foreach ($overdueFixtures as $of): ?>
+        <a href="<?= base_url('fixtures/view/' . $of['id']) ?>" class="badge bg-warning text-dark text-decoration-none">
+          <?= esc($of['match_number']) ?> · <?= esc($of['team_a_name']) ?> vs <?= esc($of['team_b_name']) ?>
+          · <?= date('d M', strtotime($of['match_date'])) ?>
+        </a>
+      <?php endforeach; ?>
+    </div>
+    <div class="mt-1 small">Please update each fixture status to <strong>Completed</strong>, <strong>Abandoned</strong> or <strong>Postponed</strong>.</div>
+  </div>
+  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
+
 <!-- Stat Cards Row -->
 <div class="row g-3 mb-4">
   <div class="col-sm-6 col-xl-3">

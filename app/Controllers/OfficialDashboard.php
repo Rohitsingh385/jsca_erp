@@ -62,12 +62,17 @@ class OfficialDashboard extends BaseController
                     'matches'           => [],
                     'total_fee'         => 0,
                     'paid'              => 0,
+                    'payreq'            => 0,
                 ];
             }
             $byTournament[$tid]['matches'][]   = $m;
             $byTournament[$tid]['total_fee']  += (float)($m['PAmt'] ?? 0);
             if (!empty($m['Pdate'])) {
                 $byTournament[$tid]['paid'] += (float)($m['PAmt'] ?? 0);
+            }
+            // If any match has payreq=1, mark whole tournament as requested
+            if (!empty($m['payreq'])) {
+                $byTournament[$tid]['payreq'] = 1;
             }
         }
 
@@ -103,6 +108,31 @@ class OfficialDashboard extends BaseController
             'pageTitle' => 'My Profile — JSCA',
             'official'  => $official,
         ]);
+    }
+
+    // ── POST /official/request-payment/:tournament_id ────────
+    public function requestPayment(int $tournamentId)
+    {
+        $official = $this->requireOfficial();
+        if (!is_array($official)) return $official;
+
+        // Verify tournament is Completed
+        $tournament = $this->db->table('tournaments')->where('id', $tournamentId)->get()->getRowArray();
+        if (!$tournament || $tournament['status'] !== 'Completed') {
+            return redirect()->to('official/dashboard')->with('error', 'Payment can only be requested after the tournament is completed.');
+        }
+
+        // Mark all unpaid, unrequested match_officials rows for this official + tournament
+        $this->db->table('match_officials mo')
+            ->join('fixtures f', 'f.id = mo.match_id')
+            ->where('f.tournament_id', $tournamentId)
+            ->where('mo.official_id', $official['id'])
+            ->where('mo.payreq', 0)
+            ->where('mo.Pdate IS NULL')
+            ->set('mo.payreq', 1)
+            ->update();
+
+        return redirect()->to('official/dashboard')->with('success', 'Payment request submitted for ' . $tournament['name'] . '. Finance team will process it shortly.');
     }
 
     // ── Render with official layout ───────────────────────────

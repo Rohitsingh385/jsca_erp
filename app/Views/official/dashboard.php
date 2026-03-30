@@ -102,10 +102,20 @@
           <?php endif; ?>
         </div>
         <?php if ($tData['tournament_status'] === 'Completed' && ($tData['total_fee'] - $tData['paid']) > 0): ?>
-          <button class="btn btn-sm btn-jsca-green" disabled title="Payment request feature coming soon">
-            <i class="bi bi-cash-coin me-1"></i> Request Payment
-            <span class="badge bg-light text-dark ms-1">₹<?= number_format($tData['total_fee'] - $tData['paid']) ?></span>
-          </button>
+          <?php if ($tData['payreq']): ?>
+            <span class="badge bg-info text-dark px-3 py-2">
+              <i class="bi bi-hourglass-split me-1"></i> Payment Requested — Awaiting Finance
+            </span>
+          <?php else: ?>
+            <form method="post" action="<?= base_url('official/request-payment/' . $tid) ?>"
+              onsubmit="return confirm('Request payment of ₹<?= number_format($tData['total_fee'] - $tData['paid']) ?> for <?= esc($tData['tournament_name']) ?>?')">
+              <?= csrf_field() ?>
+              <button type="submit" class="btn btn-sm btn-jsca-green">
+                <i class="bi bi-cash-coin me-1"></i> Request Payment
+                <span class="badge bg-light text-dark ms-1">₹<?= number_format($tData['total_fee'] - $tData['paid']) ?></span>
+              </button>
+            </form>
+          <?php endif; ?>
         <?php elseif ($tData['tournament_status'] !== 'Completed' && $tData['total_fee'] > 0): ?>
           <span class="small text-muted fst-italic">Payment available after tournament ends</span>
         <?php endif; ?>
