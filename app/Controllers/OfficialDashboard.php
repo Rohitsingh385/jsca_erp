@@ -122,15 +122,22 @@ class OfficialDashboard extends BaseController
             return redirect()->to('official/dashboard')->with('error', 'Payment can only be requested after the tournament is completed.');
         }
 
-        // Mark all unpaid, unrequested match_officials rows for this official + tournament
-        $this->db->table('match_officials mo')
+        // Get all match_ids for this official in this tournament
+        $matchIds = $this->db->table('match_officials mo')
+            ->select('mo.id')
             ->join('fixtures f', 'f.id = mo.match_id')
             ->where('f.tournament_id', $tournamentId)
             ->where('mo.official_id', $official['id'])
             ->where('mo.payreq', 0)
             ->where('mo.Pdate IS NULL')
-            ->set('mo.payreq', 1)
-            ->update();
+            ->get()->getResultArray();
+
+        if (!empty($matchIds)) {
+            $ids = array_column($matchIds, 'id');
+            $this->db->table('match_officials')
+                ->whereIn('id', $ids)
+                ->update(['payreq' => 1]);
+        }
 
         return redirect()->to('official/dashboard')->with('success', 'Payment request submitted for ' . $tournament['name'] . '. Finance team will process it shortly.');
     }

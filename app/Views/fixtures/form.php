@@ -77,27 +77,8 @@ $action = $isEdit ? base_url('fixtures/update/' . $fixture['id']) : base_url('fi
               <label class="form-label fw-semibold">Stage</label>
               <select name="stage" class="form-select" id="stageSelect">
                 <?php
-                  $structure    = $tournament['structure'] ?? 'Round Robin';
-                  $confirmedCount = isset($tournament['id'])
-                    ? (int) (\Config\Database::connect()->table('teams')
-                        ->where('tournament_id', $tournament['id'])
-                        ->where('status', 'Confirmed')
-                        ->countAllResults())
-                    : 0;
-
-                  // Derive valid stages from structure + team count
-                  $stageOptions = match(true) {
-                    $structure === 'Round Robin' && $confirmedCount <= 2 => ['Final'],
-                    $structure === 'Round Robin'                         => ['League'],
-                    $structure === 'Knockout' && $confirmedCount <= 2    => ['Final'],
-                    $structure === 'Knockout' && $confirmedCount <= 4    => ['Semi Final', 'Final'],
-                    $structure === 'Knockout'                            => ['Quarter Final', 'Semi Final', 'Final'],
-                    $structure === 'Group+Knockout'                      => ['League', 'Quarter Final', 'Semi Final', 'Final'],
-                    $structure === 'League+Playoffs'                     => ['League', 'Qualifier 1', 'Qualifier 2', 'Eliminator', 'Final'],
-                    $structure === 'Zonal'                               => ['Zonal League', 'Zonal Final', 'Semi Final', 'Final'],
-                    default                                              => ['League', 'Semi Final', 'Final'],
-                  };
-                  $currentStage = old('stage', $fixture['stage'] ?? $stageOptions[0]);
+                  $stageOptions = ['League','Zonal League','Zonal Final','Quarter Final','Semi Final','Qualifier 1','Qualifier 2','Eliminator','Final'];
+                  $currentStage = old('stage', $fixture['stage'] ?? 'League');
                 ?>
                 <?php foreach ($stageOptions as $s): ?>
                   <option value="<?= $s ?>" <?= $currentStage === $s ? 'selected' : '' ?>><?= $s ?></option>
