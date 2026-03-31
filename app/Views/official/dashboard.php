@@ -101,23 +101,14 @@
             &nbsp;·&nbsp; <span class="text-success">₹<?= number_format($tData['paid']) ?> paid</span>
           <?php endif; ?>
         </div>
-        <?php if ($tData['tournament_status'] === 'Completed' && ($tData['total_fee'] - $tData['paid']) > 0): ?>
-          <?php if ($tData['payreq']): ?>
-            <span class="badge bg-info text-dark px-3 py-2">
-              <i class="bi bi-hourglass-split me-1"></i> Payment Requested — Awaiting Finance
-            </span>
-          <?php else: ?>
-            <form method="post" action="<?= base_url('official/request-payment/' . $tid) ?>"
-              onsubmit="return confirm('Request payment of ₹<?= number_format($tData['total_fee'] - $tData['paid']) ?> for <?= esc($tData['tournament_name']) ?>?')">
-              <?= csrf_field() ?>
-              <button type="submit" class="btn btn-sm btn-jsca-green">
-                <i class="bi bi-cash-coin me-1"></i> Request Payment
-                <span class="badge bg-light text-dark ms-1">₹<?= number_format($tData['total_fee'] - $tData['paid']) ?></span>
-              </button>
-            </form>
-          <?php endif; ?>
-        <?php elseif ($tData['tournament_status'] !== 'Completed' && $tData['total_fee'] > 0): ?>
-          <span class="small text-muted fst-italic">Payment available after tournament ends</span>
+        <?php if ($tData['total_fee'] > 0): ?>
+          <div class="small text-muted">
+            <?= count($tData['matches']) ?> match<?= count($tData['matches']) > 1 ? 'es' : '' ?> &nbsp;·&nbsp;
+            ₹<?= number_format($tData['total_fee']) ?> total
+            <?php if ($tData['paid'] > 0): ?>
+              &nbsp;·&nbsp; <span class="text-success">₹<?= number_format($tData['paid']) ?> paid</span>
+            <?php endif; ?>
+          </div>
         <?php endif; ?>
       </div>
     </div>
@@ -151,11 +142,20 @@
             <td><span class="badge bg-secondary" style="font-size:10px;"><?= esc($m['official_role']) ?></span></td>
             <td><?= $m['PAmt'] ? '₹' . number_format($m['PAmt']) : '<span class="text-muted">—</span>' ?></td>
             <td>
-              <?php if (!empty($m['Pdate'])): ?>
-                <span class="badge bg-success">Paid <?= date('d M', strtotime($m['Pdate'])) ?></span>
-                <?php if ($m['VNo']): ?><div class="small text-muted"><?= esc($m['VNo']) ?></div><?php endif; ?>
+              <?php if (!empty($m['invoice_id'])): ?>
+                <a href="<?= base_url('official/invoice/' . $m['invoice_id']) ?>" target="_blank"
+                  class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-download me-1"></i> Invoice
+                  <span class="badge <?= $m['invoice_status'] === 'Paid' ? 'bg-success' : 'bg-warning text-dark' ?> ms-1">
+                    <?= esc($m['invoice_status']) ?>
+                  </span>
+                </a>
+              <?php elseif ($m['fixture_status'] === 'Completed' && $m['PAmt']): ?>
+                <span class="text-muted small">Invoice pending</span>
+              <?php elseif ($m['fixture_status'] === 'Completed' && !$m['PAmt']): ?>
+                <span class="text-muted small">No fee set</span>
               <?php elseif ($m['PAmt']): ?>
-                <span class="badge bg-warning text-dark">Pending</span>
+                <span class="badge bg-light text-dark border">Pending match completion</span>
               <?php else: ?>
                 <span class="text-muted small">—</span>
               <?php endif; ?>

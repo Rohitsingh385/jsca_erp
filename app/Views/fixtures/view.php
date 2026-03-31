@@ -24,7 +24,25 @@ $statusBadge = match($fixture['status']) {
     </div>
   </div>
   <div class="d-flex gap-2 align-items-center">
-    <span class="badge <?= $statusBadge ?> fs-6"><?= esc($fixture['status']) ?></span>
+    <?php if ($canManage && $fixture['status'] !== 'Completed'): ?>
+    <!-- Quick status update -->
+    <form method="post" action="<?= base_url('fixtures/update-status/' . $fixture['id']) ?>" class="d-flex align-items-center gap-2">
+      <?= csrf_field() ?>
+      <select name="status" class="form-select form-select-sm" style="width:auto;"
+        onchange="if(confirm('Change status to ' + this.value + '?')) this.form.submit(); else this.value='<?= esc($fixture['status']) ?>';">
+        <?php foreach (['Scheduled','Live','Completed','Abandoned','Postponed'] as $s): ?>
+          <option value="<?= $s ?>" <?= $fixture['status'] === $s ? 'selected' : '' ?>
+            <?php
+              $colors = ['Scheduled'=>'','Live'=>'','Completed'=>'','Abandoned'=>'','Postponed'=>''];
+            ?>>
+            <?= $s ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+    </form>
+    <?php else: ?>
+      <span class="badge <?= $statusBadge ?> fs-6"><?= esc($fixture['status']) ?></span>
+    <?php endif; ?>
     <?php if ($canManage && $fixture['status'] !== 'Completed'): ?>
       <a href="<?= base_url('fixtures/edit/' . $fixture['id']) ?>" class="btn btn-sm btn-outline-secondary">
         <i class="bi bi-pencil me-1"></i> Edit

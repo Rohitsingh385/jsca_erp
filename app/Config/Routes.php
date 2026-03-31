@@ -28,8 +28,9 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
     // Official Dashboard
     $routes->group('official', ['filter' => 'auth'], function ($routes) {
-        $routes->get('dashboard',              'OfficialDashboard::index');
-        $routes->get('profile',                'OfficialDashboard::profile');
+        $routes->get('dashboard',               'OfficialDashboard::index');
+        $routes->get('profile',                 'OfficialDashboard::profile');
+        $routes->get('invoice/(:num)',          'OfficialDashboard::invoice/$1');
         $routes->post('request-payment/(:num)', 'OfficialDashboard::requestPayment/$1');
     });
 
@@ -117,14 +118,17 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
 
     // ── Fixtures ──────────────────────────────────────────────
     $routes->group('fixtures', ['filter' => 'rbac:fixtures,tournaments'], function ($routes) {
-        $routes->get('/',                        'Fixtures::index');
-        $routes->get('create',                   'Fixtures::create');
-        $routes->post('store',                   'Fixtures::store');
-        $routes->get('view/(:num)',              'Fixtures::view/$1');
-        $routes->get('edit/(:num)',              'Fixtures::edit/$1');
-        $routes->post('update/(:num)',           'Fixtures::update/$1');
-        $routes->post('delete/(:num)',           'Fixtures::delete/$1');
-        $routes->get('tournament/(:num)',        'Fixtures::tournament/$1');
+        $routes->get('/',                              'Fixtures::index');
+        $routes->get('create',                         'Fixtures::create');
+        $routes->post('store',                         'Fixtures::store');
+        $routes->get('view/(:num)',                    'Fixtures::view/$1');
+        $routes->get('edit/(:num)',                    'Fixtures::edit/$1');
+        $routes->post('update/(:num)',                 'Fixtures::update/$1');
+        $routes->post('delete/(:num)',                 'Fixtures::delete/$1');
+        $routes->get('tournament/(:num)',              'Fixtures::tournament/$1');
+        $routes->get('teams-for-tournament/(:num)',    'Fixtures::teamsForTournament/$1');
+        $routes->get('officials-for-tournament/(:num)','Fixtures::officialsForTournament/$1');
+        $routes->post('update-status/(:num)',          'Fixtures::updateStatus/$1');
     });
 
     // ── Matches / Scoring ─────────────────────────────────────

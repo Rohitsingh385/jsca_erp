@@ -40,13 +40,15 @@ class OfficialDashboard extends BaseController
                       t.overs as tournament_overs, t.status as tournament_status,
                       ta.name as team_a, tb.name as team_b,
                       v.name as venue_name,
-                      ot.name as official_role')
+                      ot.name as official_role,
+                      inv.id as invoice_id, inv.invoice_number, inv.status as invoice_status')
             ->join('fixtures f',        'f.id = mo.match_id')
             ->join('tournaments t',     't.id = f.tournament_id')
             ->join('teams ta',          'ta.id = f.team_a_id')
             ->join('teams tb',          'tb.id = f.team_b_id')
             ->join('venues v',          'v.id = f.venue_id', 'left')
             ->join('official_types ot', 'ot.id = mo.official_type_id')
+            ->join('invoices inv',      'inv.match_officials_id = mo.id', 'left')
             ->where('mo.official_id', $official['id'])
             ->orderBy('f.match_date', 'DESC')
             ->get()->getResultArray();
@@ -96,6 +98,23 @@ class OfficialDashboard extends BaseController
             'totalPaid'     => $totalPaid,
             'totalPending'  => $totalPending,
         ]);
+    }
+
+    // ── GET /official/invoice/:id ────────────────────────────
+    public function invoice(int $id)
+    {
+        $official = $this->requireOfficial();
+        if (!is_array($official)) return $official;
+
+        $invoice = $this->db->table('invoices')
+            ->where('id', $id)
+            ->where('official_id', $official['id'])
+            ->get()->getRowArray();
+
+        if (!$invoice) return redirect()->to('official/dashboard')->with('error', 'Invoice not found.');
+
+        // Render printable invoice — no layout
+        return view('official/invoice', ['invoice' => $invoice]);
     }
 
     // ── GET /official/profile ─────────────────────────────────

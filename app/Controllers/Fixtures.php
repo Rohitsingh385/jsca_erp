@@ -75,6 +75,7 @@ class Fixtures extends BaseController
         return $this->render('fixtures/form', [
             'pageTitle'    => 'Create Fixture — JSCA ERP',
             'fixture'      => null,
+            'feeMap'       => [],
             'tournaments'  => $tournaments,
             'tournament'   => $tournament,
             'teams'        => $teams,
@@ -290,6 +291,13 @@ class Fixtures extends BaseController
             return redirect()->to('fixtures/view/' . $id)->with('error', 'Completed fixtures cannot be edited.');
         }
 
+        // Load existing fees from match_officials
+        $existingFees = $this->db->table('match_officials mo')
+            ->select('mo.PAmt, mo.official_id')
+            ->where('mo.match_id', $id)
+            ->get()->getResultArray();
+        $feeMap = array_column($existingFees, 'PAmt', 'official_id');
+
         $teams     = $this->db->table('teams')->where('tournament_id', $fixture['tournament_id'])->where('status', 'Confirmed')->orderBy('name')->get()->getResultArray();
         $venues    = $this->_getVenuesForTournament($fixture['tournament_id']);
         $umpires   = $this->_getOfficialsByType(['Umpire'], $fixture['tournament_id']);
@@ -307,6 +315,7 @@ class Fixtures extends BaseController
             'scorers'     => $scorers,
             'referees'    => $referees,
             'tournamentId' => $fixture['tournament_id'],
+            'feeMap'       => $feeMap,
         ]);
     }
 
@@ -391,6 +400,12 @@ class Fixtures extends BaseController
 
         $this->db->table('fixtures')->where('id', $id)->update($data);
 
+        // Auto-generate invoices when fixture is Completed
+        // Trigger if: status just changed to Completed, OR fixture was already Completed (fees may have been updated)
+        if ($data['status'] === 'Completed') {
+            $this->generateFixtureInvoices($id);
+        }
+
         // Sync match_officials — delete old, reinsert with updated officials
         $this->db->table('match_officials')->where('match_id', $id)->delete();
         $officialsToInsert = [];
@@ -440,6 +455,58 @@ class Fixtures extends BaseController
 
         return redirect()->to('fixtures?tournament_id=' . $tournamentId)
             ->with('success', 'Fixture deleted.');
+    }
+
+    // ── GET /fixtures/teams-for-tournament/:id (AJAX) ────────
+    public function teamsForTournament(int $tournamentId)
+    {
+        $teams = $this->db->table('teams')
+            ->where('tournament_id', $tournamentId)
+            ->where('status', 'Confirmed')
+            ->orderBy('name')
+            ->get()->getResultArray();
+        return $this->response->setJSON($teams);
+    }
+
+    // ── GET /fixtures/officials-for-tournament/:id (AJAX) ──────
+    public function officialsForTournament(int $tournamentId)
+    {
+        return $this->response->setJSON([
+            'umpires'  => $this->_getOfficialsByType(['Umpire'], $tournamentId),
+            'scorers'  => $this->_getOfficialsByType(['Scorer'], $tournamentId),
+            'referees' => $this->_getOfficialsByType(['Referee', 'Match Referee'], $tournamentId),
+            'venues'   => $this->_getVenuesForTournament($tournamentId),
+        ]);
+    }
+
+    // ── POST /fixtures/update-status/:id ───────────────────────
+    public function updateStatus(int $id)
+    {
+        $this->requirePermission('fixtures');
+
+        $fixture = $this->db->table('fixtures')->where('id', $id)->get()->getRowArray();
+        if (!$fixture) return redirect()->back()->with('error', 'Fixture not found.');
+
+        $newStatus = $this->request->getPost('status');
+        $allowed   = ['Scheduled', 'Live', 'Completed', 'Abandoned', 'Postponed'];
+        if (!in_array($newStatus, $allowed)) {
+            return redirect()->back()->with('error', 'Invalid status.');
+        }
+
+        $this->db->table('fixtures')->where('id', $id)->update([
+            'status'     => $newStatus,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        // Auto-generate invoices if completed
+        if ($newStatus === 'Completed') {
+            $this->generateFixtureInvoices($id);
+        }
+
+        $this->audit('STATUS_CHANGE', 'fixtures', $id, ['status' => $fixture['status']], ['status' => $newStatus]);
+
+        return redirect()->to('fixtures/view/' . $id)
+            ->with('success', 'Status updated to ' . $newStatus . '.');
     }
 
     // ── GET /fixtures/tournament/:id ──────────────────────────
