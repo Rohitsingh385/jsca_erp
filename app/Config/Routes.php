@@ -166,7 +166,10 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
         $routes->post('voucher/reject/(:num)',  'Finance::rejectVoucher/$1');
         $routes->post('voucher/mark-paid/(:num)', 'Finance::markPaid/$1');
         $routes->get('auto-generate/(:num)',    'Finance::autoGenerate/$1');
-        $routes->get('reports',                 'Finance::reports');
+        $routes->get('reports',                 'FinanceReports::index');
+        $routes->get('reports/invoices',        'FinanceReports::invoices');
+        $routes->get('reports/pending',         'FinanceReports::pending');
+        $routes->get('reports/no-bank',         'FinanceReports::noBank');
         $routes->get('export',                  'Finance::export');
         $routes->get('voucher/rcpt_create',     'Finance::rcpt_create');
         $routes->post('voucher/getMatchesByTournament',     'Finance::getMatchesByTournament');

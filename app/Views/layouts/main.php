@@ -370,22 +370,16 @@
 
       <?php if (sidebarCan($perms, $hasAll, 'finance')): ?>
         <div class="nav-section">Finance</div>
-        <a href="<?= base_url('finance') ?>" class="nav-link <?= str_starts_with(uri_string(), 'finance') ? 'active' : '' ?>">
-          <i class="bi bi-currency-rupee"></i> Finance Dashboard
-        </a>
-        <a href="<?= base_url('finance/vouchers') ?>" class="nav-link <?= str_starts_with(uri_string(), 'finance/vouchers') ? 'active' : '' ?>">
-          <i class="bi bi-receipt"></i> Vouchers
-          <?php
-          $pendingCount = \Config\Database::connect()
-            ->table('vouchers')
-            ->where('status', 'Pending Approval')
-            ->countAllResults();
-          if ($pendingCount > 0): ?>
-            <span class="badge bg-danger ms-auto"><?= $pendingCount ?></span>
+        <a href="<?= base_url('finance/reports') ?>" class="nav-link <?= str_starts_with(uri_string(), 'finance/reports') ? 'active' : '' ?>">
+          <i class="bi bi-bar-chart-line"></i> Finance Reports
+          <?php $pi = \Config\Database::connect()->table('invoices')->where('status','Generated')->countAllResults(); if ($pi > 0): ?>
+            <span class="badge bg-danger ms-auto"><?= $pi ?></span>
           <?php endif; ?>
         </a>
+        <a href="<?= base_url('finance/vouchers') ?>" class="nav-link <?= str_starts_with(uri_string(), 'finance/vouchers') ? 'active' : '' ?>">
+          <i class="bi bi-file-earmark-text"></i> Payment Vouchers
+        </a>
       <?php endif; ?>
-
       <?php if (sidebarCan($perms, $hasAll, 'analytics', 'reports')): ?>
         <div class="nav-section">Intelligence</div>
         <?php if (sidebarCan($perms, $hasAll, 'analytics')): ?>
