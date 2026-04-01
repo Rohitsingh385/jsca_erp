@@ -1,21 +1,42 @@
 <!-- app/Views/players/view.php -->
 <style>
   .doc-card {
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 12px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    background: #fff;
+    border: 1px solid #eee; border-radius: 8px; padding: 12px 14px;
+    display: flex; align-items: center; gap: 12px; margin-bottom: 8px; background: #fff;
   }
   .doc-card .doc-icon { font-size: 22px; color: #1a3a5c; flex-shrink: 0; }
   .doc-card .doc-name { font-size: 13px; font-weight: 600; }
   .doc-card .doc-meta { font-size: 11px; color: #999; }
-  .stat-box { text-align: center; padding: 14px 10px; }
-  .stat-box .val { font-size: 22px; font-weight: 800; color: #1a3a5c; }
-  .stat-box .lbl { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* Stat tiles */
+  .stat-tile {
+    border-radius: 12px; padding: 16px 12px; text-align: center;
+    color: #fff; position: relative; overflow: hidden;
+  }
+  .stat-tile .st-val { font-size: 28px; font-weight: 900; line-height: 1; }
+  .stat-tile .st-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; opacity: .85; margin-top: 4px; }
+  .stat-tile .st-icon { position: absolute; right: 10px; top: 10px; font-size: 28px; opacity: .18; }
+
+  .tile-blue   { background: linear-gradient(135deg,#1a3a5c,#2563a8); }
+  .tile-green  { background: linear-gradient(135deg,#16a34a,#2ecc71); }
+  .tile-orange { background: linear-gradient(135deg,#ea580c,#f97316); }
+  .tile-purple { background: linear-gradient(135deg,#7c3aed,#a855f7); }
+  .tile-teal   { background: linear-gradient(135deg,#0891b2,#22d3ee); }
+  .tile-red    { background: linear-gradient(135deg,#dc2626,#f87171); }
+  .tile-indigo { background: linear-gradient(135deg,#4338ca,#818cf8); }
+  .tile-amber  { background: linear-gradient(135deg,#b45309,#fbbf24); }
+
+  /* Milestone badges */
+  .milestone-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #f8f9fa; border: 1px solid #e9ecef;
+    border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: 600;
+  }
+  .milestone-badge .dot { width:8px;height:8px;border-radius:50%; }
+
+  /* Skill bar */
+  .skill-bar { height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin-top: 4px; }
+  .skill-fill { height: 100%; border-radius: 4px; }
 </style>
 
 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -105,81 +126,175 @@
 
   <!-- Career Stats -->
   <div class="col-lg-8">
+
+    <!-- Batting Tiles -->
     <div class="card mb-3">
-      <div class="card-header">Career Statistics</div>
-      <div class="card-body p-0">
-        <div class="row g-0 border-bottom">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-bar-chart-fill text-primary"></i> Batting Career
+      </div>
+      <div class="card-body">
+        <div class="row g-2 mb-3">
           <?php
-            $batting = [
-              'Matches'   => $stats['matches']       ?? 0,
-              'Runs'      => $stats['runs']           ?? 0,
-              'High Score'=> $stats['highest_score']  ?? 0,
-              'Avg'       => $stats['batting_avg']    ?? '0.00',
-              'SR'        => $stats['strike_rate']    ?? '0.00',
-              '50s'       => $stats['fifties']        ?? 0,
-              '100s'      => $stats['hundreds']       ?? 0,
+            $tiles = [
+              ['val'=>$stats['matches']??0,       'lbl'=>'Matches',    'icon'=>'bi-calendar3',         'cls'=>'tile-blue'],
+              ['val'=>$stats['runs']??0,           'lbl'=>'Total Runs', 'icon'=>'bi-lightning-charge',  'cls'=>'tile-green'],
+              ['val'=>$stats['highest_score']??0,  'lbl'=>'High Score', 'icon'=>'bi-trophy',            'cls'=>'tile-orange'],
+              ['val'=>$stats['batting_avg']??'0',  'lbl'=>'Average',    'icon'=>'bi-graph-up',          'cls'=>'tile-purple'],
+              ['val'=>$stats['strike_rate']??'0',  'lbl'=>'Strike Rate','icon'=>'bi-speedometer2',      'cls'=>'tile-teal'],
+              ['val'=>$stats['fifties']??0,        'lbl'=>'Fifties',    'icon'=>'bi-star',              'cls'=>'tile-indigo'],
+              ['val'=>$stats['hundreds']??0,       'lbl'=>'Hundreds',   'icon'=>'bi-star-fill',         'cls'=>'tile-amber'],
+              ['val'=>$stats['catches']??0,        'lbl'=>'Catches',    'icon'=>'bi-hand-index',        'cls'=>'tile-red'],
             ];
           ?>
-          <?php foreach ($batting as $lbl => $val): ?>
-            <div class="col stat-box border-end">
-              <div class="val"><?= $val ?></div>
-              <div class="lbl"><?= $lbl ?></div>
+          <?php foreach ($tiles as $t): ?>
+            <div class="col-6 col-md-3">
+              <div class="stat-tile <?= $t['cls'] ?>">
+                <i class="bi <?= $t['icon'] ?> st-icon"></i>
+                <div class="st-val"><?= $t['val'] ?></div>
+                <div class="st-lbl"><?= $t['lbl'] ?></div>
+              </div>
             </div>
           <?php endforeach; ?>
         </div>
-        <div class="row g-0">
-          <?php
-            $bowling = [
-              'Wickets' => $stats['wickets']     ?? 0,
-              'Bowl Avg'=> $stats['bowling_avg'] ?? '0.00',
-              'Economy' => $stats['economy']     ?? '0.00',
-            ];
-          ?>
-          <?php foreach ($bowling as $lbl => $val): ?>
-            <div class="col stat-box border-end">
-              <div class="val"><?= $val ?></div>
-              <div class="lbl"><?= $lbl ?></div>
-            </div>
-          <?php endforeach; ?>
-          <div class="col"></div><div class="col"></div><div class="col"></div><div class="col"></div>
+
+        <!-- Milestone badges -->
+        <div class="d-flex flex-wrap gap-2 mb-3">
+          <?php if (($stats['hundreds']??0) >= 1): ?>
+            <span class="milestone-badge"><span class="dot" style="background:#f97316;"></span><?= $stats['hundreds'] ?> × Century</span>
+          <?php endif; ?>
+          <?php if (($stats['fifties']??0) >= 1): ?>
+            <span class="milestone-badge"><span class="dot" style="background:#7c3aed;"></span><?= $stats['fifties'] ?> × Half-Century</span>
+          <?php endif; ?>
+          <?php if (($stats['highest_score']??0) >= 100): ?>
+            <span class="milestone-badge"><span class="dot" style="background:#16a34a;"></span>HS <?= $stats['highest_score'] ?></span>
+          <?php endif; ?>
+          <?php if (($stats['batting_avg']??0) >= 40): ?>
+            <span class="milestone-badge"><span class="dot" style="background:#0891b2;"></span>Avg 40+</span>
+          <?php endif; ?>
+        </div>
+
+        <!-- Skill bars -->
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div style="font-size:12px;font-weight:600;color:#555;">Batting Average</div>
+            <div class="skill-bar"><div class="skill-fill" style="width:<?= min(100, round(($stats['batting_avg']??0)/80*100)) ?>%;background:linear-gradient(90deg,#7c3aed,#a855f7);"></div></div>
+            <div style="font-size:11px;color:#999;margin-top:2px;"><?= $stats['batting_avg']??0 ?> / 80 benchmark</div>
+          </div>
+          <div class="col-md-6">
+            <div style="font-size:12px;font-weight:600;color:#555;">Strike Rate</div>
+            <div class="skill-bar"><div class="skill-fill" style="width:<?= min(100, round(($stats['strike_rate']??0)/150*100)) ?>%;background:linear-gradient(90deg,#0891b2,#22d3ee);"></div></div>
+            <div style="font-size:11px;color:#999;margin-top:2px;"><?= $stats['strike_rate']??0 ?> / 150 benchmark</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Recent Matches -->
-    <?php if (!empty($recentMatches)): ?>
-      <div class="card">
-        <div class="card-header">Recent Innings</div>
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table mb-0">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>vs</th>
-                  <th>Tournament</th>
-                  <th>Runs</th>
-                  <th>Balls</th>
-                  <th>Dismissal</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php foreach ($recentMatches as $m): ?>
-                  <tr>
-                    <td style="font-size:12px;"><?= date('d M Y', strtotime($m['match_date'])) ?></td>
-                    <td style="font-size:13px;"><?= esc($m['opponent_name']) ?></td>
-                    <td style="font-size:12px;color:#999;"><?= esc($m['tournament_name']) ?></td>
-                    <td><strong><?= $m['runs'] ?></strong><?= $m['dismissal'] === 'not out' ? '*' : '' ?></td>
-                    <td style="font-size:12px;"><?= $m['balls_faced'] ?></td>
-                    <td style="font-size:12px;color:#999;"><?= esc($m['dismissal']) ?></td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
+    <!-- Bowling Tiles -->
+    <?php if (($stats['wickets']??0) > 0): ?>
+    <div class="card mb-3">
+      <div class="card-header d-flex align-items-center gap-2">
+        <i class="bi bi-circle-fill text-danger" style="font-size:10px;"></i> Bowling Career
+      </div>
+      <div class="card-body">
+        <div class="row g-2 mb-3">
+          <?php $bTiles = [
+            ['val'=>$stats['wickets']??0,     'lbl'=>'Wickets',    'icon'=>'bi-bullseye',    'cls'=>'tile-red'],
+            ['val'=>$stats['best_bowling']??'—','lbl'=>'Best',     'icon'=>'bi-trophy',      'cls'=>'tile-orange'],
+            ['val'=>$stats['bowling_avg']??0, 'lbl'=>'Bowl Avg',   'icon'=>'bi-graph-down',  'cls'=>'tile-indigo'],
+            ['val'=>$stats['economy']??0,     'lbl'=>'Economy',    'icon'=>'bi-speedometer', 'cls'=>'tile-teal'],
+          ]; ?>
+          <?php foreach ($bTiles as $t): ?>
+            <div class="col-6 col-md-3">
+              <div class="stat-tile <?= $t['cls'] ?>">
+                <i class="bi <?= $t['icon'] ?> st-icon"></i>
+                <div class="st-val"><?= $t['val'] ?></div>
+                <div class="st-lbl"><?= $t['lbl'] ?></div>
+              </div>
+            </div>
+          <?php endforeach; ?>
         </div>
       </div>
+    </div>
     <?php endif; ?>
+
+    <!-- Charts -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-7">
+        <div class="card">
+          <div class="card-header" style="font-size:13px;">Runs per Season</div>
+          <div class="card-body"><canvas id="runsChart" height="160"></canvas></div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="card">
+          <div class="card-header" style="font-size:13px;">Innings Breakdown</div>
+          <div class="card-body d-flex align-items-center justify-content-center"><canvas id="inningsChart" height="160"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Innings -->
+    <div class="card">
+      <div class="card-header">Recent Innings</div>
+      <div class="card-body p-0">
+        <?php
+        // Fake recent innings for demo
+        $fakeInnings = [
+          ['date'=>'28 Mar 2026','vs'=>'Dhanbad Warriors','tournament'=>'Ranji Trophy 2026','runs'=>87, 'balls'=>102,'dismissal'=>'c Patel b Yadav'],
+          ['date'=>'21 Mar 2026','vs'=>'Bokaro XI',       'tournament'=>'Ranji Trophy 2026','runs'=>143,'balls'=>178,'dismissal'=>'not out'],
+          ['date'=>'14 Mar 2026','vs'=>'Jamshedpur CC',   'tournament'=>'Ranji Trophy 2026','runs'=>34, 'balls'=>51, 'dismissal'=>'lbw b Mishra'],
+          ['date'=>'05 Mar 2026','vs'=>'Hazaribagh XI',   'tournament'=>'JSCA District Cup', 'runs'=>72, 'balls'=>88, 'dismissal'=>'b Singh'],
+          ['date'=>'22 Feb 2026','vs'=>'Giridih CC',      'tournament'=>'JSCA District Cup', 'runs'=>11, 'balls'=>18, 'dismissal'=>'c & b Kumar'],
+          ['date'=>'15 Feb 2026','vs'=>'Deoghar XI',      'tournament'=>'JSCA District Cup', 'runs'=>58, 'balls'=>71, 'dismissal'=>'run out'],
+          ['date'=>'08 Feb 2026','vs'=>'Palamu Warriors', 'tournament'=>'U23 State Trophy',  'runs'=>101,'balls'=>134,'dismissal'=>'not out'],
+          ['date'=>'01 Feb 2026','vs'=>'Dumka XI',        'tournament'=>'U23 State Trophy',  'runs'=>45, 'balls'=>62, 'dismissal'=>'c Sharma b Roy'],
+        ];
+        $innings = !empty($recentMatches) ? $recentMatches : [];
+        ?>
+        <div class="table-responsive">
+          <table class="table mb-0" style="font-size:13px;">
+            <thead class="table-light">
+              <tr>
+                <th>Date</th><th>vs</th><th>Tournament</th>
+                <th class="text-center">R</th><th class="text-center">B</th>
+                <th class="text-center">SR</th><th>Dismissal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php
+              $rows = !empty($innings) ? array_map(fn($m) => [
+                'date'       => date('d M Y', strtotime($m['match_date'])),
+                'vs'         => $m['opponent_name'],
+                'tournament' => $m['tournament_name'],
+                'runs'       => $m['runs'],
+                'balls'      => $m['balls_faced'],
+                'dismissal'  => $m['dismissal'],
+              ], $innings) : $fakeInnings;
+              foreach ($rows as $row):
+                $sr = $row['balls'] > 0 ? number_format($row['runs']/$row['balls']*100,1) : '—';
+                $isNotOut = $row['dismissal'] === 'not out';
+                $runClass = $row['runs'] >= 100 ? 'text-warning fw-bold' : ($row['runs'] >= 50 ? 'text-success fw-bold' : '');
+              ?>
+              <tr>
+                <td style="font-size:12px;color:#999;"><?= esc($row['date']) ?></td>
+                <td><?= esc($row['vs']) ?></td>
+                <td style="font-size:12px;color:#999;"><?= esc($row['tournament']) ?></td>
+                <td class="text-center <?= $runClass ?>">
+                  <?= $row['runs'] ?><?= $isNotOut ? '<span style="color:#16a34a;">*</span>' : '' ?>
+                  <?php if ($row['runs'] >= 100): ?><i class="bi bi-star-fill text-warning ms-1" style="font-size:9px;"></i><?php endif; ?>
+                  <?php if ($row['runs'] >= 50 && $row['runs'] < 100): ?><i class="bi bi-star text-success ms-1" style="font-size:9px;"></i><?php endif; ?>
+                </td>
+                <td class="text-center text-muted"><?= $row['balls'] ?></td>
+                <td class="text-center text-muted"><?= $sr ?></td>
+                <td style="font-size:12px;color:#888;"><?= esc($row['dismissal']) ?></td>
+              </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Right: Info + Documents -->
@@ -319,5 +434,47 @@
 <script>
   document.getElementById('docTypeSelect').addEventListener('change', function() {
     document.getElementById('labelField').style.display = this.value === 'other' ? 'block' : 'none';
+  });
+
+  // Runs per Season bar chart
+  new Chart(document.getElementById('runsChart'), {
+    type: 'bar',
+    data: {
+      labels: ['2022','2023','2024','2025','2026'],
+      datasets: [{
+        label: 'Runs',
+        data: [312, 487, 523, 398, 127],
+        backgroundColor: ['#4338ca','#7c3aed','#0891b2','#16a34a','#ea580c'],
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#f0f0f0' }, ticks: { font: { size: 11 } } },
+        x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+
+  // Innings breakdown doughnut
+  new Chart(document.getElementById('inningsChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['100s','50s','30-49','<30'],
+      datasets: [{
+        data: [<?= $stats['hundreds']??0 ?>, <?= $stats['fifties']??0 ?>, 8, 11],
+        backgroundColor: ['#f97316','#7c3aed','#0891b2','#e5e7eb'],
+        borderWidth: 0,
+        hoverOffset: 6,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 10 } }
+      }
+    }
   });
 </script>

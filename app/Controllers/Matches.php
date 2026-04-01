@@ -139,6 +139,14 @@ class Matches extends BaseController
         ], $body['data'] ?? []);
     }
 
+    // ── GET /scoring ───────────────────────────────────────────
+    public function board()
+    {
+        return $this->render('scoring/board', [
+            'pageTitle' => 'Live Scoring — JSCA ERP',
+        ]);
+    }
+
     // ── Existing scoring routes (stubs if not yet built) ──────
     public function score(int $id)
     {

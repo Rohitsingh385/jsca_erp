@@ -72,6 +72,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // ── Teams ──────────────────────────────────────────────
     $routes->group('venues', ['filter' => 'rbac:venues,fixtures'], function ($routes) {
         $routes->get('/',              'Venues::index');
+        $routes->get('report',         'Venues::report');
         $routes->get('create',         'Venues::create');
         $routes->post('store',         'Venues::store');
         $routes->get('view/(:num)',    'Venues::view/$1');
@@ -134,6 +135,7 @@ $routes->group('', ['filter' => 'auth'], function ($routes) {
     // ── Matches / Scoring ─────────────────────────────────────
     $routes->group('matches', function ($routes) {
         $routes->get('live',                    'Matches::live');
+        $routes->get('scoring',                 'Matches::board');
         $routes->get('live/api-refresh',        'Matches::apiRefresh');
         $routes->post('live/store',             'Matches::storeLocal');
         $routes->post('live/update/(:num)',      'Matches::updateLocal/$1');

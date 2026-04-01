@@ -323,8 +323,11 @@
 
       <?php if (sidebarCan($perms, $hasAll, 'venues')): ?>
         <div class="nav-section">Venues</div>
-        <a href="<?= base_url('venues') ?>" class="nav-link <?= str_starts_with(uri_string(), 'venues') ? 'active' : '' ?>">
+        <a href="<?= base_url('venues') ?>" class="nav-link <?= uri_string() === 'venues' ? 'active' : '' ?>">
           <i class="bi bi-building"></i> Venues
+        </a>
+        <a href="<?= base_url('venues/report') ?>" class="nav-link <?= str_starts_with(uri_string(), 'venues/report') ? 'active' : '' ?>">
+          <i class="bi bi-graph-up"></i> Venue Report
         </a>
       <?php endif; ?>
 
@@ -354,6 +357,10 @@
           </a>
           <a href="<?= base_url('matches/live') ?>" class="nav-link <?= str_starts_with(uri_string(), 'matches/live') ? 'active' : '' ?>">
             <i class="bi bi-lightning-charge text-warning"></i> Live Matches
+          </a>
+          <a href="<?= base_url('matches/scoring') ?>" class="nav-link <?= str_starts_with(uri_string(), 'matches/scoring') ? 'active' : '' ?>">
+            <i class="bi bi-broadcast text-danger"></i> Live Scoring
+            <span class="badge bg-warning text-dark ms-auto" style="font-size:9px;">SOON</span>
           </a>
         <?php endif; ?>
       <?php endif; ?>

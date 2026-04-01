@@ -221,6 +221,77 @@ class Venues extends BaseController
         return redirect()->to('/venues/view/' . $id)->with('success', 'Venue updated successfully.');
     }
 
+    // ── GET /venues/report ────────────────────────────────────
+    public function report()
+    {
+        $venueId  = $this->request->getGet('venue_id');
+        $fromDate = $this->request->getGet('from');
+        $toDate   = $this->request->getGet('to');
+
+        $allowedIds = $this->getAllowedDistrictIdsFlat();
+
+        $vq = $this->db->table('venues v')
+            ->select('v.id, v.name, d.name as district_name')
+            ->join('districts d', 'd.id = v.district_id')
+            ->where('v.is_active', 1)->orderBy('v.name');
+        if (($this->currentUser['role_name'] ?? '') !== 'superadmin' && !empty($allowedIds)) {
+            $vq->whereIn('v.district_id', $allowedIds);
+        }
+        $allVenues = $vq->get()->getResultArray();
+
+        $sq = $this->db->table('fixtures f')
+            ->select([
+                'v.id as venue_id', 'v.name as venue_name', 'd.name as district_name',
+                'v.capacity', 'v.pitch_type', 'v.has_floodlights',
+                'COUNT(f.id) as total_matches',
+                'SUM(f.status = "Completed") as completed',
+                'SUM(f.status = "Abandoned") as abandoned',
+                'SUM(f.status = "Postponed") as postponed',
+                'SUM(f.status = "Scheduled") as scheduled',
+                'SUM(f.status = "Live") as live_now',
+                'SUM(f.is_day_night = 1) as day_night',
+                'COUNT(DISTINCT f.tournament_id) as tournaments',
+                'MAX(f.match_date) as last_match',
+                'MIN(f.match_date) as first_match',
+            ])
+            ->join('venues v', 'v.id = f.venue_id')
+            ->join('districts d', 'd.id = v.district_id')
+            ->groupBy('v.id');
+
+        if (($this->currentUser['role_name'] ?? '') !== 'superadmin' && !empty($allowedIds)) {
+            $sq->whereIn('v.district_id', $allowedIds);
+        }
+        if ($venueId)  $sq->where('f.venue_id', $venueId);
+        if ($fromDate) $sq->where('f.match_date >=', $fromDate);
+        if ($toDate)   $sq->where('f.match_date <=', $toDate);
+
+        $stats = $sq->get()->getResultArray();
+
+        $recentFixtures = [];
+        if ($venueId) {
+            $fq = $this->db->table('fixtures f')
+                ->select('f.id, f.match_number, f.match_date, f.stage, f.is_day_night, f.status, f.result_summary, t.name as tournament_name, ta.name as team_a, tb.name as team_b')
+                ->join('tournaments t', 't.id = f.tournament_id')
+                ->join('teams ta', 'ta.id = f.team_a_id')
+                ->join('teams tb', 'tb.id = f.team_b_id')
+                ->where('f.venue_id', $venueId)
+                ->orderBy('f.match_date', 'DESC');
+            if ($fromDate) $fq->where('f.match_date >=', $fromDate);
+            if ($toDate)   $fq->where('f.match_date <=', $toDate);
+            $recentFixtures = $fq->get()->getResultArray();
+        }
+
+        return $this->render('venues/report', [
+            'pageTitle'      => 'Venue Usage Report — JSCA ERP',
+            'stats'          => $stats,
+            'allVenues'      => $allVenues,
+            'recentFixtures' => $recentFixtures,
+            'venueId'        => $venueId,
+            'fromDate'       => $fromDate,
+            'toDate'         => $toDate,
+        ]);
+    }
+
     // ── POST /venues/toggle/:id ───────────────────────────────
     public function toggle(int $id)
     {
